@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صحافة العالم — اقرأ صحف العالم مترجمة إلى العربية</title>
+<meta name="description" content="واجهة واحدة لقراءة الصحف والمواقع الإخبارية المجانية حول العالم مع ترجمة فورية إلى العربية.">
+<style>
+/* ============ الأساسيات ============ */
+:root{
+  --bg:#f5f6f8; --panel:#fff; --panel2:#fbfbfc; --line:#e4e7eb; --line2:#eef1f4;
+  --ink:#101418; --ink2:#3c4550; --muted:#727d8a; --accent:#0f766e; --accent2:#0b5d57;
+  --accent-soft:#e8f5f3; --ok:#15803d; --ok-soft:#e8f6ec; --warn:#b45309; --warn-soft:#fdf3e6;
+  --bad:#b91c1c; --bad-soft:#fdeaea; --shadow:0 1px 2px rgba(16,20,24,.05), 0 8px 24px rgba(16,20,24,.05);
+  --r:12px; --r-sm:8px; --sb:290px; --tr:470px; --read:1.02rem;
+  --font:"Noto Kufi Arabic","Segoe UI","Dubai",Tahoma,"Noto Naskh Arabic",Arial,sans-serif;
+  --font-read:"Noto Naskh Arabic","Amiri","Sakkal Majalla",Georgia,serif;
+}
+html[data-theme="dark"]{
+  --bg:#0e1114; --panel:#151a1f; --panel2:#12171b; --line:#242b33; --line2:#1d232a;
+  --ink:#e9ecef; --ink2:#c6ccd3; --muted:#8f99a4; --accent:#2dd4bf; --accent2:#5eead4;
+  --accent-soft:#112b28; --ok:#4ade80; --ok-soft:#12271a; --warn:#fbbf24; --warn-soft:#2a2213;
+  --bad:#f87171; --bad-soft:#2b1616; --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;
+  display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
+}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 35%,transparent);border-radius:20px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--muted) 55%,transparent);background-clip:content-box}
+.hidden{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ============ الشريط العلوي ============ */
+#topbar{
+  display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex:0 0 auto;min-height:56px;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand svg{flex:0 0 auto;color:var(--accent)}
+.brand b{font-size:1.06rem;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.brand small{color:var(--muted);font-size:.76rem;display:block;margin-top:-3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-spacer{flex:1}
+.tbtn{
+  display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid var(--line);
+  border-radius:var(--r-sm);color:var(--ink2);background:var(--panel);white-space:nowrap;font-size:.85rem;
+  transition:background .15s,border-color .15s;
+}
+.tbtn:hover{background:var(--panel2);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.tbtn.icon{width:34px;padding:0;justify-content:center}
+.tbtn.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));color:var(--accent2)}
+#srvbadge{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:6px;padding:0 4px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+.pulse.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+
+/* ============ التخطيط ثلاثي النوافذ ============ */
+#layout{flex:1;display:flex;min-height:0;direction:ltr}
+html[data-side="right"] #layout{direction:rtl}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0;direction:rtl;background:var(--panel)}
+#sidebar{flex:0 0 var(--sb);width:var(--sb);border-inline-end:1px solid var(--line);background:var(--panel2)}
+#viewer{flex:1 1 auto;background:var(--bg)}
+#trans{flex:0 0 var(--tr);width:var(--tr);border-inline-start:1px solid var(--line)}
+.split{flex:0 0 6px;cursor:col-resize;background:transparent;position:relative;z-index:5}
+.split::after{content:"";position:absolute;inset:0 2px;background:transparent;transition:background .15s}
+.split:hover::after,.split.drag::after{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+
+.panehead{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);
+  background:var(--panel);min-height:50px;flex:0 0 auto;
+}
+.panehead h2{margin:0;font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:7px;min-width:0}
+.panehead h2 .sub{font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panehead .sp{flex:1}
+.ghost{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;min-width:32px;padding:0 9px;
+  border:1px solid transparent;border-radius:var(--r-sm);color:var(--ink2);font-size:.83rem;
+}
+.ghost:hover{background:var(--panel2);border-color:var(--line)}
+.ghost.icon{padding:0;width:32px}
+.ghost.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ghost.primary:hover{background:var(--accent2)}
+.ghost.soft{background:var(--accent-soft);color:var(--accent2);border-color:color-mix(in srgb,var(--accent) 25%,var(--line))}
+.ghost[disabled]{opacity:.45;cursor:not-allowed}
+.body{flex:1;min-height:0;overflow:auto;position:relative}
+#listbody{padding:8px 8px 40px}
+#stage,#tstage{padding:0}
+
+/* ============ القائمة الجانبية ============ */
+.search{position:relative;margin:10px 10px 6px}
+.search svg{position:absolute;inset-inline-start:9px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{
+  width:100%;height:38px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);
+  padding-inline:33px 30px;font-size:.88rem;
+}
+.search input::placeholder{color:var(--muted)}
+.search .clr{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;color:var(--muted);display:none;align-items:center;justify-content:center}
+.search .clr:hover{background:var(--line2)}
+.search.has .clr{display:flex}
+.chips{display:flex;gap:6px;padding:2px 10px 10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.chip{
+  font-size:.76rem;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);background:var(--panel);
+  display:inline-flex;align-items:center;gap:5px;
+}
+.chip:hover{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.chip.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));color:var(--accent2);font-weight:600}
+.chip .n{font-size:.7rem;color:var(--muted);font-weight:400}
+.country{border-bottom:1px solid var(--line2)}
+.country>summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 10px;font-size:.88rem;font-weight:600;
+  border-radius:var(--r-sm);
+}
+.country>summary::-webkit-details-marker{display:none}
+.country>summary:hover{background:var(--line2)}
+.country .flag{font-size:1.05rem;line-height:1}
+.country .cname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.country>.apad,.country>summary{text-align:start}
+.country .num{font-size:.72rem;color:var(--muted);font-weight:500;background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:999px}
+.country .caret{color:var(--muted);transition:transform .18s}
+.country[open] .caret{transform:rotate(-90deg)}
+.country .apad{padding:2px 4px 8px}
+.paper{display:flex;align-items:center;gap:4px;border-radius:var(--r-sm);padding-inline-start:2px}
+.paper:hover{background:var(--line2)}
+.paper.active{background:var(--accent-soft)}
+.paper.active .pname{color:var(--accent2)}
+.plink{flex:1;min-width:0;display:flex;align-items:center;gap:7px;padding:7px 8px;text-align:start;border-radius:var(--r-sm)}
+.pname{flex:1;min-width:0;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.dot.yes{background:var(--ok)} .dot.no{background:var(--warn)} .dot.unknown{background:var(--muted);opacity:.5}
+.ltag{font-size:.66rem;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;letter-spacing:.4px;text-transform:uppercase;background:var(--panel)}
+.ar-tag{font-size:.66rem;color:var(--accent2);background:var(--accent-soft);border-radius:4px;padding:0 4px;font-weight:700}
+.mini{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 auto;opacity:0}
+.paper:hover .mini,.mini.on{opacity:1}
+.mini:hover{background:var(--panel);color:var(--accent)}
+.mini.star.on{color:#d97706}
+.noresult{padding:24px 14px;text-align:center;color:var(--muted);font-size:.85rem}
+.sechead{padding:10px 10px 4px;font-size:.72rem;color:var(--muted);font-weight:700;letter-spacing:.4px}
+.sidefoot{flex:0 0 auto;border-top:1px solid var(--line);padding:8px 12px;font-size:.74rem;color:var(--muted);background:var(--panel);display:flex;gap:6px;align-items:center}
+@media (max-width:980px){.sidefoot{padding-bottom:64px}}
+
+/* ============ نافذة العرض ============ */
+#viewer .toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto;min-height:50px;flex-wrap:wrap}
+.title{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.title .flag{font-size:1.1rem}
+.title b{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title .url{color:var(--muted);font-size:.75rem;direction:ltr;unicode-bidi:plaintext;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.state{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.state.yes{background:var(--ok-soft);color:var(--ok)} .state.no{background:var(--warn-soft);color:var(--warn)} .state.unknown{background:var(--line2);color:var(--muted)}
+.frame-wrap{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--panel)}
+.frame-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--panel2);border-bottom:1px solid var(--line2);font-size:.76rem;color:var(--muted);flex:0 0 auto;flex-wrap:wrap}
+.frame-bar label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+iframe{flex:1;width:100%;border:0;background:#fff}
+.card{
+  margin:26px auto;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:22px 22px 20px;box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 8px;font-size:1rem;display:flex;align-items:center;gap:8px}
+.card p{margin:0 0 12px;color:var(--ink2);font-size:.88rem}
+.card .row{display:flex;gap:8px;flex-wrap:wrap}
+.kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:.78rem}
+.emptywrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px}
+.reader{padding:22px 26px 60px;max-width:760px;margin:0 auto}
+.reader .rtitle{font-size:1.5rem;line-height:1.35;margin:0 0 6px;font-weight:700}
+.reader .rmeta{color:var(--muted);font-size:.8rem;margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.reader .blk{margin:0 0 14px;font-size:var(--read);line-height:1.75;color:var(--ink)}
+.reader .blk.h{font-weight:700;font-size:calc(var(--read) * 1.1);margin-top:22px}
+.reader .blk.li{position:relative;padding-inline-start:16px}
+.reader .blk.li::before{content:"•";position:absolute;inset-inline-start:2px;color:var(--accent)}
+.reader[dir="ltr"]{font-family:Georgia,"Times New Roman",serif}
+.reader[dir="rtl"]{font-family:var(--font-read)}
+.reader[dir="rtl"] .rtitle{font-family:var(--font)}
+
+/* ============ نافذة الترجمة ============ */
+#tstage .reader{max-width:none;padding:18px 20px 70px}
+.tmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.76rem;border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:14px}
+.tmeta .tag{background:var(--accent-soft);color:var(--accent2);border-radius:999px;padding:1px 8px;font-weight:600}
+.tp{margin:0 0 16px;font-family:var(--font-read);font-size:calc(var(--read) * 1.0);line-height:2;color:var(--ink)}
+.tp.h{font-weight:700;font-size:calc(var(--read) * 1.12);line-height:1.7;margin-top:24px;font-family:var(--font);color:var(--accent2)}
+.orig{
+  font-size:.82rem;line-height:1.6;color:var(--muted);border-inline-start:2px solid var(--line);
+  padding:2px 10px 2px 0;margin:-8px 0 16px;direction:ltr;text-align:left;unicode-bidi:plaintext;font-family:Georgia,serif;
+}
+.prog{height:4px;background:var(--line2);border-radius:4px;overflow:hidden;margin:0 0 14px}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.spin{width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.skel{margin:6px 0 18px}
+.skel b{display:block;height:11px;border-radius:6px;background:linear-gradient(90deg,var(--line2),var(--line),var(--line2));background-size:200% 100%;animation:sh 1.3s linear infinite;margin-bottom:8px}
+@keyframes sh{to{background-position:-200% 0}}
+.toast{
+  position:fixed;inset-block-end:18px;inset-inline-start:50%;transform:translateX(50%);background:var(--ink);color:var(--bg);
+  padding:9px 16px;border-radius:999px;font-size:.84rem;box-shadow:var(--shadow);z-index:80;opacity:0;pointer-events:none;transition:opacity .2s
+}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(8,10,12,.45);display:flex;align-items:center;justify-content:center;padding:18px;z-index:90}
+.modal .card{margin:0;max-width:640px;max-height:82vh;overflow:auto}
+.modal ul{margin:0 0 12px;padding-inline-start:20px;color:var(--ink2);font-size:.88rem}
+.modal li{margin-bottom:7px}
+#mtabs{display:none}
+@media (max-width:980px){#sideBtn{display:none}.brand svg{width:22px;height:22px}}
+
+/* ============ الجوال ============ */
+@media (max-width:980px){
+  #layout{flex-direction:column;direction:rtl !important}
+  #sidebar{position:fixed;inset-block:56px 0;inset-inline-start:0;width:min(88vw,330px);flex-basis:auto;z-index:40;box-shadow:var(--shadow);transform:translateX(105%)}
+  html[data-side="right"] #sidebar{inset-inline-start:auto;inset-inline-end:0;transform:translateX(-105%)}
+  body.drawer #sidebar{transform:none}
+  #scrim{position:fixed;inset:56px 0 0;background:rgba(8,10,12,.4);z-index:35;display:none}
+  body.drawer #scrim{display:block}
+  .split{display:none}
+  #viewer,#trans{flex:1 1 auto;width:auto;border:0}
+  #trans{display:none}
+  body.tab-trans #viewer{display:none}
+  body.tab-trans #trans{display:flex}
+  #mtabs{display:flex;gap:6px;position:fixed;inset-block-end:14px;inset-inline-start:50%;transform:translateX(50%);z-index:45;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:var(--shadow)}
+  #mtabs .ghost{height:34px;border-radius:999px;padding:0 14px;font-size:.84rem}
+  .brand small{display:none}
+}
+@media print{#topbar,#sidebar,.split,.toolbar,#mtabs{display:none !important}#trans{flex:1;display:block !important;border:0}}
+</style>
+</head>
+<body>
+<!-- ======================= الشريط العلوي ======================= -->
+<header id="topbar">
+  <button class="tbtn icon" id="menuBtn" aria-label="إظهار القائمة" title="إظهار/إخفاء القائمة">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/>
+    </svg>
+    <span><b>صحافة العالم</b><small>اقرأ صحف العالم، واقرأها بالعربية</small></span>
+  </div>
+  <div class="top-spacer"></div>
+  <div id="srvbadge" title="حالة الوسيط المحلي"><span class="pulse" id="srvdot"></span><span id="srvtext">جارٍ الفحص…</span></div>
+  <button class="tbtn icon" id="sideBtn" aria-label="تغيير جهة القائمة" title="جهة القائمة: يسار/يمين">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+  </button>
+  <button class="tbtn icon" id="themeBtn" aria-label="الوضع الليلي" title="الوضع الليلي/النهاري">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z"/></svg>
+  </button>
+  <button class="tbtn icon" id="helpBtn" aria-label="مساعدة" title="كيف يعمل الموقع؟">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.5v.4"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+  </button>
+</header>
+
+<!-- ======================= النوافذ الثلاث ======================= -->
+<div id="layout">
+  <!-- ① نافذة الروابط -->
+  <aside id="sidebar" class="pane" aria-label="قائمة الصحف">
+    <div class="search" id="searchwrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="ابحث عن صحيفة أو دولة…  (اضغط /)" aria-label="بحث">
+      <button class="clr" id="qclr" aria-label="مسح البحث">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip on" data-f="free">مجانية بدون اشتراك <span class="n" id="n-free"></span></button>
+      <button class="chip" data-f="embed">تُعرض مباشرة <span class="n" id="n-embed"></span></button>
+      <button class="chip" data-f="all">كل المصادر <span class="n" id="n-all"></span></button>
+      <button class="chip" data-f="fav">★ مفضلتي <span class="n" id="n-fav">0</span></button>
+    </div>
+    <div class="body" id="listbody"></div>
+    <div class="sidefoot" id="sidefoot">
+      <span id="sf-count"></span> · <button id="aboutLink" style="color:var(--accent)">عن الموقع</button>
+    </div>
+  </aside>
+  <div class="split" id="split1" role="separator" aria-orientation="vertical" title="اسحب لتغيير العرض"></div>
+
+  <!-- ② نافذة الموقع المختار -->
+  <main id="viewer" class="pane" aria-label="نافذة الموقع">
+    <div class="toolbar">
+      <div class="title" id="vtitle">
+        <b>لم تختر صحيفة بعد</b>
+      </div>
+      <span class="state unknown" id="vstate">—</span>
+      <button class="ghost icon" id="modeBtn" title="تبديل: عرض الموقع المباشر / وضع القراءة النصي">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>
+      </button>
+      <button class="ghost icon" id="reloadBtn" title="إعادة تحميل">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+      </button>
+      <a class="ghost icon" id="openExt" href="#" target="_blank" rel="noopener noreferrer" title="فتح في تبويب جديد">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+      </a>
+    </div>
+    <div class="body" id="stage"></div>
+  </main>
+  <div class="split" id="split2" role="separator" aria-orientation="vertical" title="اسحب لتغيير العرض"></div>
+
+  <!-- ③ نافذة الترجمة -->
+  <section id="trans" class="pane" aria-label="نافذة الترجمة">
+    <div class="toolbar">
+      <div class="title"><b>الترجمة العربية</b><span class="url" id="tsrc"></span></div>
+      <button class="ghost soft" id="trBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h9M8 3v2c0 4-2 7-5 9"/><path d="M6 12c1.5 3 4 5 7 6"/><path d="m13 20 3.5-8 3.5 8M14.5 17h5"/></svg>
+        ترجم
+      </button>
+      <button class="ghost icon" id="biBtn" title="إظهار النص الأصلي بجانب الترجمة">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16"/><path d="M4 7h5M6.5 7c0 3-1 5-2.5 6M4.5 13c1.2 2 2.6 3.3 4 4"/><path d="M14 17h6M17 7v10"/></svg>
+      </button>
+      <button class="ghost icon" id="fontUp" title="تكبير الخط">أ+</button>
+      <button class="ghost icon" id="fontDn" title="تصغير الخط">أ-</button>
+      <button class="ghost icon" id="copyBtn" title="نسخ الترجمة">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+      </button>
+      <button class="ghost icon" id="printBtn" title="طباعة / حفظ PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M7 16h10v4H7z"/></svg>
+      </button>
+    </div>
+    <div class="body" id="tstage"></div>
+  </section>
+</div>
+
+<div id="scrim"></div>
+<div id="mtabs">
+  <button class="ghost on" id="tabView">الموقع</button>
+  <button class="ghost" id="tabTrans">الترجمة</button>
+</div>
+<div class="toast" id="toast"></div>
+<!-- ============ بيانات الصحف (289 صحيفة في 97 دولة) — عدّل هنا لإضافة صحيفة ============ -->
+<script>
+/* بيانات صحافة العالم — 289 صحيفة في 97 دولة. حُدّثت 2026-10-08 */
+const META = {"countries": 97, "papers": 289, "free": 223, "embeddable": 157, "arabicEditions": 11};
+const PAPERS = [
+  {"c":"المملكة المتحدة","cc":"gb","n":"BBC News","u":"https://www.bbc.com/news","l":"en","t":"free","e":"no","a":"https://www.bbc.com/arabic"},
+  {"c":"المملكة المتحدة","cc":"gb","n":"The Guardian","u":"https://www.theguardian.com/international","l":"en","t":"free","e":"no","a":null},
+  {"c":"المملكة المتحدة","cc":"gb","n":"The Independent","u":"https://www.independent.co.uk/","l":"en","t":"free","e":"no","a":null},
+  {"c":"المملكة المتحدة","cc":"gb","n":"Sky News","u":"https://news.sky.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"المملكة المتحدة","cc":"gb","n":"The Telegraph","u":"https://www.telegraph.co.uk/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"فرنسا","cc":"fr","n":"France 24","u":"https://www.france24.com/en/","l":"en","t":"free","e":"yes","a":"https://www.france24.com/ar/"},
+  {"c":"فرنسا","cc":"fr","n":"RFI","u":"https://www.rfi.fr/en/","l":"en","t":"free","e":"yes","a":"https://www.rfi.fr/ar/"},
+  {"c":"فرنسا","cc":"fr","n":"Le Monde","u":"https://www.lemonde.fr/","l":"fr","t":"mixed","e":"no","a":null},
+  {"c":"فرنسا","cc":"fr","n":"Libération","u":"https://www.liberation.fr/","l":"fr","t":"mixed","e":"yes","a":null},
+  {"c":"فرنسا","cc":"fr","n":"20 Minutes","u":"https://www.20minutes.fr/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"فرنسا","cc":"fr","n":"Ouest-France","u":"https://www.ouest-france.fr/","l":"fr","t":"mixed","e":"yes","a":null},
+  {"c":"فرنسا","cc":"fr","n":"Le Figaro","u":"https://www.lefigaro.fr/","l":"fr","t":"mixed","e":"no","a":null},
+  {"c":"ألمانيا","cc":"de","n":"DW عربية","u":"https://www.dw.com/ar/","l":"ar","t":"free","e":"no","a":"https://www.dw.com/ar/"},
+  {"c":"ألمانيا","cc":"de","n":"DW English","u":"https://www.dw.com/en/","l":"en","t":"free","e":"no","a":"https://www.dw.com/ar/"},
+  {"c":"ألمانيا","cc":"de","n":"tagesschau","u":"https://www.tagesschau.de/","l":"de","t":"free","e":"no","a":null},
+  {"c":"ألمانيا","cc":"de","n":"taz","u":"https://taz.de/","l":"de","t":"free","e":"no","a":null},
+  {"c":"ألمانيا","cc":"de","n":"Der Spiegel","u":"https://www.spiegel.de/","l":"de","t":"mixed","e":"no","a":null},
+  {"c":"ألمانيا","cc":"de","n":"Die Zeit","u":"https://www.zeit.de/","l":"de","t":"mixed","e":"yes","a":null},
+  {"c":"ألمانيا","cc":"de","n":"Süddeutsche Zeitung","u":"https://www.sueddeutsche.de/","l":"de","t":"mixed","e":"yes","a":null},
+  {"c":"روسيا","cc":"ru","n":"RT","u":"https://www.rt.com/","l":"en","t":"free","e":"yes","a":"https://arabic.rt.com/"},
+  {"c":"روسيا","cc":"ru","n":"TASS","u":"https://tass.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"روسيا","cc":"ru","n":"RIA Novosti","u":"https://ria.ru/","l":"ru","t":"free","e":"unknown","a":null},
+  {"c":"روسيا","cc":"ru","n":"Meduza","u":"https://meduza.io/en","l":"en","t":"free","e":"yes","a":null},
+  {"c":"روسيا","cc":"ru","n":"Novaya Gazeta Europe","u":"https://novayagazeta.eu/","l":"ru","t":"free","e":"no","a":null},
+  {"c":"روسيا","cc":"ru","n":"Kommersant","u":"https://www.kommersant.ru/","l":"ru","t":"mixed","e":"unknown","a":null},
+  {"c":"إسبانيا","cc":"es","n":"El País","u":"https://elpais.com/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"إسبانيا","cc":"es","n":"El Mundo","u":"https://www.elmundo.es/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"إسبانيا","cc":"es","n":"20minutos","u":"https://www.20minutos.es/","l":"es","t":"free","e":"no","a":null},
+  {"c":"إسبانيا","cc":"es","n":"RTVE","u":"https://www.rtve.es/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"إسبانيا","cc":"es","n":"Público","u":"https://www.publico.es/","l":"es","t":"free","e":"no","a":null},
+  {"c":"إيطاليا","cc":"it","n":"ANSA","u":"https://www.ansa.it/english/","l":"en","t":"free","e":"yes","a":"https://www.ansa.it/arabi/"},
+  {"c":"إيطاليا","cc":"it","n":"Rai News","u":"https://www.rainews.it/","l":"it","t":"free","e":"yes","a":null},
+  {"c":"إيطاليا","cc":"it","n":"Il Post","u":"https://www.ilpost.it/","l":"it","t":"mixed","e":"yes","a":null},
+  {"c":"إيطاليا","cc":"it","n":"La Repubblica","u":"https://www.repubblica.it/","l":"it","t":"mixed","e":"yes","a":null},
+  {"c":"إيطاليا","cc":"it","n":"Corriere della Sera","u":"https://www.corriere.it/","l":"it","t":"mixed","e":"yes","a":null},
+  {"c":"هولندا","cc":"nl","n":"NOS","u":"https://nos.nl/","l":"nl","t":"free","e":"no","a":null},
+  {"c":"هولندا","cc":"nl","n":"DutchNews.nl","u":"https://www.dutchnews.nl/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"هولندا","cc":"nl","n":"de Volkskrant","u":"https://www.volkskrant.nl/","l":"nl","t":"mixed","e":"yes","a":null},
+  {"c":"هولندا","cc":"nl","n":"NRC","u":"https://www.nrc.nl/","l":"nl","t":"mixed","e":"yes","a":null},
+  {"c":"بلجيكا","cc":"be","n":"VRT NWS","u":"https://www.vrt.be/vrtnws/en/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"بلجيكا","cc":"be","n":"RTBF Info","u":"https://www.rtbf.be/info","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"بلجيكا","cc":"be","n":"Le Soir","u":"https://www.lesoir.be/","l":"fr","t":"mixed","e":"yes","a":null},
+  {"c":"سويسرا","cc":"ch","n":"Swissinfo عربي","u":"https://www.swissinfo.ch/ara/","l":"ar","t":"free","e":"yes","a":"https://www.swissinfo.ch/ara/"},
+  {"c":"سويسرا","cc":"ch","n":"SRF News","u":"https://www.srf.ch/news","l":"de","t":"free","e":"no","a":null},
+  {"c":"سويسرا","cc":"ch","n":"Blick","u":"https://www.blick.ch/","l":"de","t":"mixed","e":"yes","a":null},
+  {"c":"سويسرا","cc":"ch","n":"NZZ","u":"https://www.nzz.ch/","l":"de","t":"mixed","e":"no","a":null},
+  {"c":"النمسا","cc":"at","n":"ORF","u":"https://orf.at/","l":"de","t":"free","e":"yes","a":null},
+  {"c":"النمسا","cc":"at","n":"Der Standard","u":"https://www.derstandard.at/","l":"de","t":"mixed","e":"yes","a":null},
+  {"c":"السويد","cc":"se","n":"SVT Nyheter","u":"https://www.svt.se/nyheter","l":"sv","t":"free","e":"yes","a":null},
+  {"c":"السويد","cc":"se","n":"Dagens Nyheter","u":"https://www.dn.se/","l":"sv","t":"mixed","e":"no","a":null},
+  {"c":"السويد","cc":"se","n":"Aftonbladet","u":"https://www.aftonbladet.se/","l":"sv","t":"mixed","e":"no","a":null},
+  {"c":"النرويج","cc":"no","n":"NRK","u":"https://www.nrk.no/","l":"no","t":"free","e":"no","a":null},
+  {"c":"النرويج","cc":"no","n":"VG","u":"https://www.vg.no/","l":"no","t":"mixed","e":"no","a":null},
+  {"c":"النرويج","cc":"no","n":"Aftenposten","u":"https://www.aftenposten.no/","l":"no","t":"mixed","e":"no","a":null},
+  {"c":"الدنمارك","cc":"dk","n":"DR Nyheder","u":"https://www.dr.dk/nyheder","l":"da","t":"free","e":"no","a":null},
+  {"c":"الدنمارك","cc":"dk","n":"Politiken","u":"https://politiken.dk/","l":"da","t":"mixed","e":"no","a":null},
+  {"c":"فنلندا","cc":"fi","n":"Yle News","u":"https://yle.fi/news","l":"en","t":"free","e":"no","a":null},
+  {"c":"فنلندا","cc":"fi","n":"Helsingin Sanomat","u":"https://www.hs.fi/","l":"fi","t":"mixed","e":"no","a":null},
+  {"c":"أيسلندا","cc":"is","n":"mbl.is","u":"https://www.mbl.is/frettir/","l":"is","t":"free","e":"yes","a":null},
+  {"c":"أيسلندا","cc":"is","n":"Vísir","u":"https://www.visir.is/","l":"is","t":"free","e":"yes","a":null},
+  {"c":"بولندا","cc":"pl","n":"TVN24","u":"https://tvn24.pl/","l":"pl","t":"free","e":"no","a":null},
+  {"c":"بولندا","cc":"pl","n":"Onet Wiadomości","u":"https://wiadomosci.onet.pl/","l":"pl","t":"free","e":"yes","a":null},
+  {"c":"بولندا","cc":"pl","n":"Gazeta Wyborcza","u":"https://wyborcza.pl/","l":"pl","t":"mixed","e":"yes","a":null},
+  {"c":"أوكرانيا","cc":"ua","n":"Ukrainska Pravda","u":"https://www.pravda.com.ua/eng/","l":"en","t":"free","e":"no","a":null},
+  {"c":"أوكرانيا","cc":"ua","n":"The Kyiv Independent","u":"https://kyivindependent.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"أوكرانيا","cc":"ua","n":"UNIAN","u":"https://www.unian.info/","l":"en","t":"free","e":"no","a":null},
+  {"c":"التشيك","cc":"cz","n":"ČT24","u":"https://ct24.ceskatelevize.cz/","l":"cs","t":"free","e":"no","a":null},
+  {"c":"التشيك","cc":"cz","n":"iDNES","u":"https://www.idnes.cz/","l":"cs","t":"mixed","e":"no","a":null},
+  {"c":"التشيك","cc":"cz","n":"Novinky","u":"https://www.novinky.cz/","l":"cs","t":"mixed","e":"no","a":null},
+  {"c":"المجر","cc":"hu","n":"Telex","u":"https://telex.hu/","l":"hu","t":"free","e":"no","a":null},
+  {"c":"المجر","cc":"hu","n":"Index","u":"https://index.hu/","l":"hu","t":"free","e":"yes","a":null},
+  {"c":"المجر","cc":"hu","n":"HVG","u":"https://hvg.hu/","l":"hu","t":"mixed","e":"no","a":null},
+  {"c":"رومانيا","cc":"ro","n":"Digi24","u":"https://www.digi24.ro/","l":"ro","t":"free","e":"yes","a":null},
+  {"c":"رومانيا","cc":"ro","n":"HotNews","u":"https://hotnews.ro/","l":"ro","t":"free","e":"yes","a":null},
+  {"c":"بلغاريا","cc":"bg","n":"Dnevnik","u":"https://www.dnevnik.bg/","l":"bg","t":"free","e":"no","a":null},
+  {"c":"بلغاريا","cc":"bg","n":"Mediapool","u":"https://www.mediapool.bg/","l":"bg","t":"free","e":"no","a":null},
+  {"c":"كرواتيا","cc":"hr","n":"Index.hr","u":"https://www.index.hr/","l":"hr","t":"free","e":"yes","a":null},
+  {"c":"كرواتيا","cc":"hr","n":"Jutarnji list","u":"https://www.jutarnji.hr/","l":"hr","t":"mixed","e":"yes","a":null},
+  {"c":"صربيا","cc":"rs","n":"B92","u":"https://www.b92.net/","l":"sr","t":"free","e":"yes","a":null},
+  {"c":"صربيا","cc":"rs","n":"Danas","u":"https://www.danas.rs/","l":"sr","t":"free","e":"yes","a":null},
+  {"c":"اليونان","cc":"gr","n":"ERT News","u":"https://www.ertnews.gr/","l":"el","t":"free","e":"yes","a":null},
+  {"c":"اليونان","cc":"gr","n":"Kathimerini","u":"https://www.kathimerini.gr/","l":"el","t":"mixed","e":"yes","a":null},
+  {"c":"اليونان","cc":"gr","n":"To Vima","u":"https://www.tovima.gr/","l":"el","t":"mixed","e":"yes","a":null},
+  {"c":"تركيا","cc":"tr","n":"Anadolu Agency","u":"https://www.aa.com.tr/en","l":"en","t":"free","e":"no","a":"https://www.aa.com.tr/ar"},
+  {"c":"تركيا","cc":"tr","n":"Daily Sabah","u":"https://www.dailysabah.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"تركيا","cc":"tr","n":"Hürriyet","u":"https://www.hurriyet.com.tr/","l":"tr","t":"free","e":"yes","a":null},
+  {"c":"تركيا","cc":"tr","n":"Cumhuriyet","u":"https://www.cumhuriyet.com.tr/","l":"tr","t":"free","e":"yes","a":null},
+  {"c":"أيرلندا","cc":"ie","n":"RTÉ News","u":"https://www.rte.ie/news/","l":"en","t":"free","e":"no","a":null},
+  {"c":"أيرلندا","cc":"ie","n":"The Irish Times","u":"https://www.irishtimes.com/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"البرتغال","cc":"pt","n":"RTP Notícias","u":"https://www.rtp.pt/noticias/","l":"pt","t":"free","e":"no","a":null},
+  {"c":"البرتغال","cc":"pt","n":"Público","u":"https://www.publico.pt/","l":"pt","t":"mixed","e":"yes","a":null},
+  {"c":"البرتغال","cc":"pt","n":"Observador","u":"https://observador.pt/","l":"pt","t":"mixed","e":"yes","a":null},
+  {"c":"الإمارات","cc":"ae","n":"Gulf News","u":"https://gulfnews.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الإمارات","cc":"ae","n":"البيان","u":"https://www.albayan.ae/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"الإمارات","cc":"ae","n":"الاتحاد","u":"https://www.alittihad.ae/","l":"ar","t":"mixed","e":"no","a":null},
+  {"c":"الإمارات","cc":"ae","n":"Khaleej Times","u":"https://www.khaleejtimes.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الإمارات","cc":"ae","n":"The National","u":"https://www.thenationalnews.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"السعودية","cc":"sa","n":"Arab News","u":"https://www.arabnews.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"السعودية","cc":"sa","n":"عكاظ","u":"https://www.okaz.com.sa/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"السعودية","cc":"sa","n":"Saudi Gazette","u":"https://saudigazette.com.sa/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"السعودية","cc":"sa","n":"الشرق الأوسط","u":"https://aawsat.com/","l":"ar","t":"mixed","e":"no","a":null},
+  {"c":"مصر","cc":"eg","n":"الأهرام","u":"https://www.ahram.org.eg/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"مصر","cc":"eg","n":"المصري اليوم","u":"https://www.almasryalyoum.com/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"مصر","cc":"eg","n":"مدى مصر","u":"https://www.madamasr.com/ar/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"مصر","cc":"eg","n":"Daily News Egypt","u":"https://www.dailynewsegypt.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"قطر","cc":"qa","n":"الجزيرة","u":"https://www.aljazeera.net/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"قطر","cc":"qa","n":"Al Jazeera English","u":"https://www.aljazeera.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"قطر","cc":"qa","n":"The Peninsula","u":"https://thepeninsulaqatar.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"قطر","cc":"qa","n":"Gulf Times","u":"https://www.gulf-times.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الكويت","cc":"kw","n":"Kuwait Times","u":"https://kuwaittimes.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الكويت","cc":"kw","n":"Arab Times","u":"https://www.arabtimesonline.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الكويت","cc":"kw","n":"الجريدة","u":"https://www.aljarida.com/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"البحرين","cc":"bh","n":"Gulf Daily News","u":"https://www.gdnonline.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"البحرين","cc":"bh","n":"أخبار الخليج","u":"https://www.akhbar-alkhaleej.com/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"عُمان","cc":"om","n":"Times of Oman","u":"https://timesofoman.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"عُمان","cc":"om","n":"Oman Observer","u":"https://www.omanobserver.om/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الأردن","cc":"jo","n":"Jordan Times","u":"https://jordantimes.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الأردن","cc":"jo","n":"Roya News عربي","u":"https://www.royanews.tv/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"الأردن","cc":"jo","n":"الغد","u":"https://alghad.com/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"لبنان","cc":"lb","n":"النهار","u":"https://www.annahar.com/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"لبنان","cc":"lb","n":"Naharnet","u":"https://www.naharnet.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"لبنان","cc":"lb","n":"L'Orient-Le Jour","u":"https://www.lorientlejour.com/","l":"fr","t":"mixed","e":"yes","a":null},
+  {"c":"العراق","cc":"iq","n":"Rudaw عربي","u":"https://www.rudaw.net/arabic","l":"ar","t":"free","e":"no","a":null},
+  {"c":"العراق","cc":"iq","n":"Shafaq News","u":"https://shafaq.com/ar","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"العراق","cc":"iq","n":"Iraqi News","u":"https://www.iraqinews.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"سوريا","cc":"sy","n":"عنب بلدي","u":"https://www.enabbaladi.net/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"سوريا","cc":"sy","n":"Syria Direct","u":"https://syriadirect.org/","l":"en","t":"free","e":"no","a":null},
+  {"c":"فلسطين","cc":"ps","n":"وكالة وفا","u":"https://www.wafa.ps/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"فلسطين","cc":"ps","n":"معًا","u":"https://www.maannews.net/","l":"ar","t":"free","e":"no","a":null},
+  {"c":"اليمن","cc":"ye","n":"Yemen Online","u":"https://yemen-online.net/","l":"en","t":"free","e":"unknown","a":null},
+  {"c":"اليمن","cc":"ye","n":"سبتمبر نت","u":"https://26sep.net/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"المغرب","cc":"ma","n":"Hespress","u":"https://www.hespress.com/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"المغرب","cc":"ma","n":"Morocco World News","u":"https://www.moroccoworldnews.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"المغرب","cc":"ma","n":"Le Matin","u":"https://lematin.ma/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"الجزائر","cc":"dz","n":"الخبر","u":"https://www.elkhabar.com/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"الجزائر","cc":"dz","n":"TSA","u":"https://www.tsa-algerie.com/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"الجزائر","cc":"dz","n":"El Watan","u":"https://elwatan-dz.com/","l":"fr","t":"free","e":"no","a":null},
+  {"c":"تونس","cc":"tn","n":"Mosaique FM","u":"https://www.mosaiquefm.net/","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"تونس","cc":"tn","n":"La Presse","u":"https://lapresse.tn/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"تونس","cc":"tn","n":"Business News","u":"https://www.businessnews.com.tn/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"ليبيا","cc":"ly","n":"Libya Herald","u":"https://libyaherald.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"ليبيا","cc":"ly","n":"The Libya Observer","u":"https://libyaobserver.ly/","l":"en","t":"free","e":"no","a":null},
+  {"c":"السودان","cc":"sd","n":"Sudan Tribune","u":"https://sudantribune.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"السودان","cc":"sd","n":"Dabanga عربي","u":"https://www.dabangasudan.org/ar","l":"ar","t":"free","e":"yes","a":null},
+  {"c":"إسرائيل","cc":"il","n":"The Times of Israel","u":"https://www.timesofisrael.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"إسرائيل","cc":"il","n":"+972 Magazine","u":"https://www.972mag.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"إسرائيل","cc":"il","n":"Haaretz","u":"https://www.haaretz.com/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"إيران","cc":"ir","n":"Tehran Times","u":"https://www.tehrantimes.com/","l":"en","t":"free","e":"unknown","a":null},
+  {"c":"إيران","cc":"ir","n":"IRNA عربي","u":"https://ar.irna.ir/","l":"ar","t":"free","e":"unknown","a":null},
+  {"c":"إيران","cc":"ir","n":"Iran Daily","u":"https://iran-daily.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الصين","cc":"cn","n":"China Daily","u":"https://www.chinadaily.com.cn/","l":"en","t":"free","e":"yes","a":"https://arabic.chinadaily.com.cn/"},
+  {"c":"الصين","cc":"cn","n":"Global Times","u":"https://www.globaltimes.cn/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الصين","cc":"cn","n":"Xinhua","u":"https://english.news.cn/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"اليابان","cc":"jp","n":"NHK World","u":"https://www3.nhk.or.jp/nhkworld/en/news/","l":"en","t":"free","e":"yes","a":"https://www3.nhk.or.jp/nhkworld/ar/news/"},
+  {"c":"اليابان","cc":"jp","n":"Mainichi","u":"https://mainichi.jp/english/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"اليابان","cc":"jp","n":"The Japan Times","u":"https://www.japantimes.co.jp/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"كوريا الجنوبية","cc":"kr","n":"The Korea Herald","u":"https://www.koreaherald.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"كوريا الجنوبية","cc":"kr","n":"The Korea Times","u":"https://www.koreatimes.co.kr/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"كوريا الجنوبية","cc":"kr","n":"Yonhap","u":"https://en.yna.co.kr/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الهند","cc":"in","n":"The Indian Express","u":"https://indianexpress.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الهند","cc":"in","n":"The Times of India","u":"https://timesofindia.indiatimes.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الهند","cc":"in","n":"NDTV","u":"https://www.ndtv.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الهند","cc":"in","n":"The Wire","u":"https://thewire.in/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الهند","cc":"in","n":"The Hindu","u":"https://www.thehindu.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"باكستان","cc":"pk","n":"Dawn","u":"https://www.dawn.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"باكستان","cc":"pk","n":"The Express Tribune","u":"https://tribune.com.pk/","l":"en","t":"free","e":"no","a":null},
+  {"c":"باكستان","cc":"pk","n":"The News International","u":"https://www.thenews.com.pk/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"بنغلاديش","cc":"bd","n":"The Daily Star","u":"https://www.thedailystar.net/","l":"en","t":"free","e":"no","a":null},
+  {"c":"بنغلاديش","cc":"bd","n":"bdnews24","u":"https://bdnews24.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"بنغلاديش","cc":"bd","n":"Prothom Alo","u":"https://www.prothomalo.com/","l":"bn","t":"free","e":"yes","a":null},
+  {"c":"سريلانكا","cc":"lk","n":"Daily Mirror","u":"https://www.dailymirror.lk/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"سريلانكا","cc":"lk","n":"Daily News","u":"https://www.dailynews.lk/","l":"en","t":"free","e":"no","a":null},
+  {"c":"نيبال","cc":"np","n":"The Kathmandu Post","u":"https://kathmandupost.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"نيبال","cc":"np","n":"The Himalayan Times","u":"https://thehimalayantimes.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"إندونيسيا","cc":"id","n":"Antara News","u":"https://en.antaranews.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"إندونيسيا","cc":"id","n":"Kompas","u":"https://www.kompas.com/","l":"id","t":"free","e":"yes","a":null},
+  {"c":"إندونيسيا","cc":"id","n":"Tempo English","u":"https://en.tempo.co/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"إندونيسيا","cc":"id","n":"The Jakarta Post","u":"https://www.thejakartapost.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"ماليزيا","cc":"my","n":"The Star","u":"https://www.thestar.com.my/","l":"en","t":"free","e":"no","a":null},
+  {"c":"ماليزيا","cc":"my","n":"Free Malaysia Today","u":"https://www.freemalaysiatoday.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"ماليزيا","cc":"my","n":"Malay Mail","u":"https://www.malaymail.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"ماليزيا","cc":"my","n":"New Straits Times","u":"https://www.nst.com.my/","l":"en","t":"mixed","e":"unknown","a":null},
+  {"c":"سنغافورة","cc":"sg","n":"CNA","u":"https://www.channelnewsasia.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"سنغافورة","cc":"sg","n":"Today Online","u":"https://www.todayonline.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"سنغافورة","cc":"sg","n":"The Straits Times","u":"https://www.straitstimes.com/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"تايلاند","cc":"th","n":"The Nation Thailand","u":"https://www.nationthailand.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"تايلاند","cc":"th","n":"Bangkok Post","u":"https://www.bangkokpost.com/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"فيتنام","cc":"vn","n":"VnExpress International","u":"https://e.vnexpress.net/","l":"en","t":"free","e":"no","a":null},
+  {"c":"فيتنام","cc":"vn","n":"Vietnam News","u":"https://vietnamnews.vn/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"فيتنام","cc":"vn","n":"Tuoi Tre News","u":"https://tuoitrenews.vn/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الفلبين","cc":"ph","n":"Rappler","u":"https://www.rappler.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الفلبين","cc":"ph","n":"Inquirer","u":"https://newsinfo.inquirer.net/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الفلبين","cc":"ph","n":"Philstar","u":"https://www.philstar.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"تايوان","cc":"tw","n":"Taipei Times","u":"https://www.taipeitimes.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"تايوان","cc":"tw","n":"Focus Taiwan","u":"https://focustaiwan.tw/","l":"en","t":"free","e":"no","a":null},
+  {"c":"هونغ كونغ","cc":"hk","n":"Hong Kong Free Press","u":"https://hongkongfp.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"هونغ كونغ","cc":"hk","n":"RTHK English","u":"https://rthk9.rthk.hk/","l":"en","t":"free","e":"no","a":null},
+  {"c":"هونغ كونغ","cc":"hk","n":"SCMP","u":"https://www.scmp.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"أفغانستان","cc":"af","n":"TOLOnews","u":"https://tolonews.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"أفغانستان","cc":"af","n":"Pajhwok","u":"https://pajhwok.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"أستراليا","cc":"au","n":"ABC News","u":"https://www.abc.net.au/news","l":"en","t":"free","e":"no","a":null},
+  {"c":"أستراليا","cc":"au","n":"SBS News","u":"https://www.sbs.com.au/news","l":"en","t":"free","e":"no","a":null},
+  {"c":"أستراليا","cc":"au","n":"Guardian Australia","u":"https://www.theguardian.com/au","l":"en","t":"free","e":"no","a":null},
+  {"c":"أستراليا","cc":"au","n":"The Sydney Morning Herald","u":"https://www.smh.com.au/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"نيوزيلندا","cc":"nz","n":"RNZ","u":"https://www.rnz.co.nz/news","l":"en","t":"free","e":"yes","a":null},
+  {"c":"نيوزيلندا","cc":"nz","n":"Stuff","u":"https://www.stuff.co.nz/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"نيوزيلندا","cc":"nz","n":"NZ Herald","u":"https://www.nzherald.co.nz/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"NPR","u":"https://www.npr.org/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"AP News","u":"https://apnews.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"Reuters","u":"https://www.reuters.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"CNN","u":"https://edition.cnn.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"PBS NewsHour","u":"https://www.pbs.org/newshour/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"ProPublica","u":"https://www.propublica.org/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"USA Today","u":"https://www.usatoday.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"The New York Times","u":"https://www.nytimes.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"الولايات المتحدة","cc":"us","n":"The Washington Post","u":"https://www.washingtonpost.com/","l":"en","t":"mixed","e":"unknown","a":null},
+  {"c":"كندا","cc":"ca","n":"CBC News","u":"https://www.cbc.ca/news","l":"en","t":"free","e":"no","a":null},
+  {"c":"كندا","cc":"ca","n":"CTV News","u":"https://www.ctvnews.ca/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"كندا","cc":"ca","n":"Global News","u":"https://globalnews.ca/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"كندا","cc":"ca","n":"The Globe and Mail","u":"https://www.theglobeandmail.com/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"المكسيك","cc":"mx","n":"El Universal","u":"https://www.eluniversal.com.mx/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"المكسيك","cc":"mx","n":"Milenio","u":"https://www.milenio.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"المكسيك","cc":"mx","n":"Animal Político","u":"https://www.animalpolitico.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"المكسيك","cc":"mx","n":"La Jornada","u":"https://www.jornada.com.mx/","l":"es","t":"free","e":"no","a":null},
+  {"c":"البرازيل","cc":"br","n":"g1 Globo","u":"https://g1.globo.com/","l":"pt","t":"free","e":"yes","a":null},
+  {"c":"البرازيل","cc":"br","n":"UOL Notícias","u":"https://noticias.uol.com.br/","l":"pt","t":"free","e":"yes","a":null},
+  {"c":"البرازيل","cc":"br","n":"Agência Brasil","u":"https://agenciabrasil.ebc.com.br/en","l":"en","t":"free","e":"yes","a":null},
+  {"c":"البرازيل","cc":"br","n":"Folha de S.Paulo","u":"https://www1.folha.uol.com.br/internacional/en/","l":"en","t":"mixed","e":"yes","a":null},
+  {"c":"الأرجنتين","cc":"ar","n":"Infobae","u":"https://www.infobae.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"الأرجنتين","cc":"ar","n":"Clarín","u":"https://www.clarin.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"الأرجنتين","cc":"ar","n":"Página/12","u":"https://www.pagina12.com.ar/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"الأرجنتين","cc":"ar","n":"La Nación","u":"https://www.lanacion.com.ar/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"تشيلي","cc":"cl","n":"Cooperativa","u":"https://www.cooperativa.cl/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"تشيلي","cc":"cl","n":"La Tercera","u":"https://www.latercera.com/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"تشيلي","cc":"cl","n":"El Mercurio","u":"https://www.emol.com/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"كولومبيا","cc":"co","n":"El Espectador","u":"https://www.elespectador.com/","l":"es","t":"free","e":"no","a":null},
+  {"c":"كولومبيا","cc":"co","n":"Semana","u":"https://www.semana.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"كولومبيا","cc":"co","n":"El Tiempo","u":"https://www.eltiempo.com/","l":"es","t":"mixed","e":"no","a":null},
+  {"c":"بيرو","cc":"pe","n":"La República","u":"https://larepublica.pe/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"بيرو","cc":"pe","n":"Gestión","u":"https://gestion.pe/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"بيرو","cc":"pe","n":"El Comercio","u":"https://elcomercio.pe/","l":"es","t":"mixed","e":"yes","a":null},
+  {"c":"فنزويلا","cc":"ve","n":"Efecto Cocuyo","u":"https://efectococuyo.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"فنزويلا","cc":"ve","n":"Tal Cual","u":"https://talcualdigital.com/","l":"es","t":"free","e":"no","a":null},
+  {"c":"فنزويلا","cc":"ve","n":"El Nacional","u":"https://www.elnacional.com/","l":"es","t":"free","e":"no","a":null},
+  {"c":"كوبا","cc":"cu","n":"Granma","u":"https://en.granma.cu/","l":"en","t":"free","e":"unknown","a":null},
+  {"c":"كوبا","cc":"cu","n":"14ymedio","u":"https://www.14ymedio.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"الإكوادور","cc":"ec","n":"Primicias","u":"https://www.primicias.ec/","l":"es","t":"free","e":"no","a":null},
+  {"c":"الإكوادور","cc":"ec","n":"El Universo","u":"https://www.eluniverso.com/","l":"es","t":"mixed","e":"no","a":null},
+  {"c":"بوليفيا","cc":"bo","n":"El Deber","u":"https://eldeber.com.bo/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"بوليفيا","cc":"bo","n":"Los Tiempos","u":"https://www.lostiempos.com/","l":"es","t":"free","e":"no","a":null},
+  {"c":"أوروغواي","cc":"uy","n":"la diaria","u":"https://ladiaria.com.uy/","l":"es","t":"free","e":"no","a":null},
+  {"c":"أوروغواي","cc":"uy","n":"El Observador","u":"https://www.elobservador.com.uy/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"باراغواي","cc":"py","n":"ABC Color","u":"https://www.abc.com.py/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"باراغواي","cc":"py","n":"Última Hora","u":"https://www.ultimahora.com/","l":"es","t":"free","e":"yes","a":null},
+  {"c":"نيجيريا","cc":"ng","n":"Punch","u":"https://punchng.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"نيجيريا","cc":"ng","n":"Vanguard","u":"https://www.vanguardngr.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"نيجيريا","cc":"ng","n":"Premium Times","u":"https://www.premiumtimesng.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"نيجيريا","cc":"ng","n":"The Guardian Nigeria","u":"https://guardian.ng/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"كينيا","cc":"ke","n":"Daily Nation","u":"https://nation.africa/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"كينيا","cc":"ke","n":"The Standard","u":"https://www.standardmedia.co.ke/","l":"en","t":"free","e":"no","a":null},
+  {"c":"كينيا","cc":"ke","n":"Citizen Digital","u":"https://www.citizen.digital/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"جنوب أفريقيا","cc":"za","n":"Daily Maverick","u":"https://www.dailymaverick.co.za/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"جنوب أفريقيا","cc":"za","n":"Mail & Guardian","u":"https://mg.co.za/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"جنوب أفريقيا","cc":"za","n":"SABC News","u":"https://www.sabcnews.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"جنوب أفريقيا","cc":"za","n":"News24","u":"https://www.news24.com/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"غانا","cc":"gh","n":"Graphic Online","u":"https://www.graphic.com.gh/","l":"en","t":"free","e":"no","a":null},
+  {"c":"غانا","cc":"gh","n":"MyJoyOnline","u":"https://www.myjoyonline.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"إثيوبيا","cc":"et","n":"Addis Standard","u":"https://addisstandard.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"إثيوبيا","cc":"et","n":"Ethiopian Monitor","u":"https://ethiopianmonitor.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"تنزانيا","cc":"tz","n":"The Citizen","u":"https://www.thecitizen.co.tz/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"تنزانيا","cc":"tz","n":"Daily News","u":"https://dailynews.co.tz/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"أوغندا","cc":"ug","n":"Daily Monitor","u":"https://www.monitor.co.ug/","l":"en","t":"mixed","e":"no","a":null},
+  {"c":"أوغندا","cc":"ug","n":"New Vision","u":"https://www.newvision.co.ug/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"رواندا","cc":"rw","n":"The New Times","u":"https://www.newtimes.co.rw/","l":"en","t":"free","e":"no","a":null},
+  {"c":"السنغال","cc":"sn","n":"Le Soleil","u":"https://lesoleil.sn/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"السنغال","cc":"sn","n":"Seneweb","u":"https://www.seneweb.com/","l":"fr","t":"free","e":"no","a":null},
+  {"c":"ساحل العاج","cc":"ci","n":"Fraternité Matin","u":"https://www.fratmat.info/","l":"fr","t":"free","e":"no","a":null},
+  {"c":"ساحل العاج","cc":"ci","n":"Abidjan.net","u":"https://news.abidjan.net/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"الكاميرون","cc":"cm","n":"Journal du Cameroun","u":"https://www.journalducameroun.com/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"الكاميرون","cc":"cm","n":"Cameroon Tribune","u":"https://www.cameroon-tribune.cm/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"زيمبابوي","cc":"zw","n":"NewsDay","u":"https://www.newsday.co.zw/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"زيمبابوي","cc":"zw","n":"The Herald","u":"https://www.herald.co.zw/","l":"en","t":"free","e":"no","a":null},
+  {"c":"زامبيا","cc":"zm","n":"Lusaka Times","u":"https://www.lusakatimes.com/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"زامبيا","cc":"zm","n":"Zambia Daily Mail","u":"https://www.daily-mail.co.zm/","l":"en","t":"free","e":"yes","a":null},
+  {"c":"موزمبيق","cc":"mz","n":"Club of Mozambique","u":"https://clubofmozambique.com/","l":"en","t":"free","e":"no","a":null},
+  {"c":"أنغولا","cc":"ao","n":"Jornal de Angola","u":"https://www.jornaldeangola.ao/","l":"pt","t":"mixed","e":"yes","a":null},
+  {"c":"مالي","cc":"ml","n":"L'Essor","u":"https://www.essor.ml/","l":"fr","t":"free","e":"yes","a":null},
+  {"c":"مالي","cc":"ml","n":"Malijet","u":"https://malijet.com/","l":"fr","t":"free","e":"no","a":null},
+  {"c":"السودان الجنوبي","cc":"ss","n":"Eye Radio","u":"https://eyeradio.org/","l":"en","t":"free","e":"yes","a":null},
+];
+</script>
+<script>
+"use strict";
+/* =========================================================================
+   صحافة العالم — تطبيق واجهة واحدة. لا مكتبات خارجية، لا خطوط خارجية.
+   ========================================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const LS_KEY = "sahafa.v2";
+
+/* ---------- أدوات عامة ---------- */
+const flagOf = cc => cc.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt()));
+const LANG_NAME = {ar:"العربية",en:"الإنجليزية",fr:"الفرنسية",de:"الألمانية",es:"الإسبانية",it:"الإيطالية",nl:"الهولندية",ru:"الروسية",
+ tr:"التركية",pt:"البرتغالية",sv:"السويدية",no:"النرويجية",da:"الدنماركية",fi:"الفنلندية",pl:"البولندية",cs:"التشيكية",hu:"الهنغارية",
+ ro:"الرومانية",el:"اليونانية",sr:"الصربية",hr:"الكرواتية",bg:"البلغارية",is:"الأيسلندية",id:"الإندونيسية",ms:"الماليزية",th:"التايلاندية",
+ vi:"الفيتنامية",zh:"الصينية",ja:"اليابانية",ko:"الكورية",hi:"الهندية",bn:"البنغالية",fa:"الفارسية",he:"العبرية",uk:"الأوكرانية",
+ af:"الأفريكانية",am:"الأمهرية",sw:"السواحيلية",ku:"الكردية",ne:"النيبالية",si:"السنهالية",ta:"التاميلية",te:"التيلوغوية",ur:"الأردية",az:"الأذرية",kk:"الكازاخية"};
+const RTL_LANGS = new Set(["ar","he","fa","ur","ckb","ku"]);
+const langLabel = l => (LANG_NAME[l] || (l || "").toUpperCase());
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s || "").toLowerCase().replace(/[\u064B-\u0652\u0670\u0640]/g, "").replace(/\s+/g, " ").trim();
+const hostOf = u => { try { return new URL(u).host.replace(/^www\./, ""); } catch (e) { return u; } };
+const isArabicText = s => (s.match(/[\u0600-\u06FF]/g) || []).length > (s.length * 0.25);
+
+/* ---------- الحالة ---------- */
+const S = {
+  server:false, sel:null, mode:"read", compat:false, forceProxy:false,
+  filter:"free", q:"", theme:"light", side:"left", bilingual:false, scale:1,
+  widths:{sb:290, tr:470}, tstate:"idle", favs:new Set(), lastResult:null, fromCache:false
+};
+const PCACHE = new Map();   // url -> page data
+const TCACHE = new Map();   // url -> translation result
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({
+    theme:S.theme, side:S.side, widths:S.widths, favs:[...S.favs], filter:S.filter,
+    sel:S.sel ? S.sel.u : null, mode:S.mode, bilingual:S.bilingual, scale:S.scale
+  })); }catch(e){}
+}
+function load(){
+  try{ const j = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    Object.assign(S, {theme:j.theme||"light", side:j.side||"left", filter:j.filter||"free",
+      mode:j.mode||"read", bilingual:!!j.bilingual, scale:j.scale||1,
+      widths:Object.assign({sb:290,tr:470}, j.widths||{})});
+    (j.favs||[]).forEach(u=>S.favs.add(u));
+    return j.sel;
+  }catch(e){ return null; }
+}
+
+/* ---------- تنبيهات ---------- */
+let toastT;
+function toast(msg, ms=2600){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), ms);
+}
+
+/* =========================================================================
+   ① نافذة الروابط: بناء القائمة والفلترة
+   ========================================================================= */
+const byCountry = [];
+(function buildGroups(){
+  const m = new Map();
+  PAPERS.forEach(p => { if(!m.has(p.c)) m.set(p.c, {c:p.c, cc:p.cc, items:[]}); m.get(p.c).items.push(p); });
+  m.forEach(g => byCountry.push(g));
+  byCountry.sort((a,b)=> (b.items.length - a.items.length) || a.c.localeCompare(b.c,"ar"));
+})();
+
+function matches(p){
+  if (S.filter === "free" && p.t !== "free") return false;
+  if (S.filter === "embed" && p.e !== "yes") return false;
+  if (S.filter === "fav" && !S.favs.has(p.u)) return false;
+  if (S.q){
+    const q = norm(S.q);
+    const hay = norm(p.n + " " + p.c + " " + p.u + " " + (p.l||""));
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+const visibleCount = () => PAPERS.filter(matches).length;
+
+function renderList(){
+  const box = $("#listbody");
+  const parts = [];
+  byCountry.forEach(g => {
+    const items = g.items.filter(matches);
+    if (!items.length) return;
+    parts.push(
+      `<details class="country" data-c="${esc(g.c)}"${items.some(p=>S.sel&&p.u===S.sel.u)||S.q?" open":""}>
+        <summary><span class="flag">${flagOf(g.cc)}</span><span class="cname">${esc(g.c)}</span>
+          <span class="num">${items.length}</span>
+          <svg class="caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+        </summary>
+        <div class="apad">${ items.map(paperRow).join("") }</div>
+      </details>`);
+  });
+  box.innerHTML = parts.length ? parts.join("") :
+    `<div class="noresult">لا نتائج مطابقة.<br>جرّب <b>كل المصادر</b> أو امسح البحث${S.filter!=="free"?"":' أو أوقف فلتر «مجانية»'}.</div>`;
+  const c = visibleCount();
+  $("#n-free").textContent  = S.filter==="free"  ? c : PAPERS.filter(p=>p.t==="free").length;
+  $("#n-embed").textContent = S.filter==="embed" ? c : PAPERS.filter(p=>p.e==="yes").length;
+  $("#n-all").textContent   = S.filter==="all"   ? c : PAPERS.length;
+  $("#n-fav").textContent   = S.favs.size;
+  const sf = $("#sf-count");
+  if (sf) sf.textContent = `${META.papers} صحيفة في ${META.countries} دولة`;
+}
+function paperRow(p){
+  const on = S.sel && S.sel.u === p.u;
+  return `<div class="paper${on?" active":""}" data-u="${esc(p.u)}">
+    <button class="plink" data-act="open" title="${esc(p.n)} — ${esc(hostOf(p.u))}">
+      <span class="pname">${esc(p.n)}</span>
+      ${p.a?`<span class="ar-tag" title="لهذه الصحيفة نسخة عربية رسمية">ع</span>`:""}
+      <span class="ltag" title="${langLabel(p.l)}">${esc((p.l||"").toUpperCase())}</span>
+      <span class="dot ${p.e}" title="${p.e==="yes"?"يُعرض داخل الموقع":p.e==="no"?"يمنع التضمين — يعمل بوضع القراءة/الوسيط":"غير مؤكد"}"></span>
+    </button>
+    <button class="mini star${S.favs.has(p.u)?" on":""}" data-act="fav" title="${S.favs.has(p.u)?"إزالة من المفضلة":"أضف إلى المفضلة"}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="${S.favs.has(p.u)?"currentColor":"none"}" stroke="currentColor" stroke-width="1.7"><path d="m12 3.6 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.8l5.9-.8z"/></svg>
+    </button>
+    <a class="mini" href="${esc(p.u)}" target="_blank" rel="noopener noreferrer" title="فتح في تبويب جديد">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+    </a>
+  </div>`;
+}
+$("#listbody").addEventListener("click", e => {
+  if (e.target.closest("a")) return;   // روابط «فتح في تبويب» تُترك للمتصفح
+  const row = e.target.closest(".paper"); if (!row) return;
+  const u = row.dataset.u, p = PAPERS.find(x=>x.u===u); if (!p) return;
+  const act = (e.target.closest("[data-act]")||{}).dataset ? e.target.closest("[data-act]").dataset.act : null;
+  if (act === "fav"){
+    S.favs.has(u) ? S.favs.delete(u) : S.favs.add(u); save(); renderList(); return;
+  }
+  if (act === "open"){ select(p); }
+});
+$("#q").addEventListener("input", e => {
+  S.q = e.target.value; $("#searchwrap").classList.toggle("has", !!S.q); renderList();
+});
+$("#qclr").addEventListener("click", () => { S.q=""; $("#q").value=""; $("#searchwrap").classList.remove("has"); renderList(); });
+$("#chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if(!c) return;
+  S.filter = c.dataset.f; $$(".chip").forEach(x=>x.classList.toggle("on", x===c)); save(); renderList();
+});
+
+/* =========================================================================
+   جلب الصفحات: عبر الخادم المرفق (server.py) أو مباشرةً من المتصفح
+   ========================================================================= */
+async function apiJSON(path, opt){
+  const r = await fetch(path, Object.assign({cache:"no-store"}, opt||{}));
+  const ct = r.headers.get("content-type")||"";
+  if (!ct.includes("json")) throw new Error("استجابة غير متوقعة من الوسيط (HTTP " + r.status + ")");
+  const j = await r.json();
+  if (!j || j.ok === false) throw new Error((j && j.error) || ("فشل الطلب (HTTP " + r.status + ")"));
+  return j;
+}
+async function getPage(url, opts={}){
+  const fresh = !!opts.fresh;
+  if (!fresh && PCACHE.has(url)) return PCACHE.get(url);
+  let data;
+  if (S.server){
+    try { data = await apiJSON("api/page?url=" + encodeURIComponent(url)); }
+    catch(e){ data = await clientPage(url); data.warn = "تعذّر الجلب عبر الخادم: " + e.message; }
+  } else {
+    data = await clientPage(url);
+  }
+  data.url = url; PCACHE.set(url, data); return data;
+}
+
+/* --- مسار المتصفح المباشر (بدون خادم): عدة وسائط نصية بديلة --- */
+async function clientPage(url){
+  const errs = [];
+  // 1) r.jina.ai : يعيد نص الصفحة
+  try{
+    const r = await fetch("https://r.jina.ai/" + url, {headers:{'x-respond-with':'markdown'}});
+    if (r.ok){ const md = await r.text(); const p = parseMarkdown(md); if (p.blocks.length > 4) return p; errs.push("jina: نص قليل"); }
+    else errs.push("jina: HTTP " + r.status);
+  }catch(e){ errs.push("jina: " + e.message); }
+  // 2) وسائط HTML بديلة (تعمل من أي متصفح)
+  const prox = [
+    u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+    u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
+    u => "https://corsproxy.io/?" + encodeURIComponent(u)
+  ];
+  for (const mk of prox){
+    try{
+      const r = await fetch(mk(url), {signal: AbortSignal.timeout(12000)});
+      if (!r.ok){ errs.push("proxy: HTTP " + r.status); continue; }
+      const html = await r.text();
+      const p = parseHTML(html, url);
+      if (p.blocks.length > 4) return p;
+      errs.push("HTML: نص قليل");
+    }catch(e){ errs.push(e.message); }
+  }
+  throw new Error("لم نتمكن من جلب نص الصفحة. " + (errs.slice(0,3).join(" · ") || ""));
+}
+function parseMarkdown(md){
+  const lines = String(md).split(/\r?\n/); const blocks = []; let title = "";
+  for (let raw of lines){
+    let l = raw.trim(); if (!l) continue;
+    const tm = l.match(/^Title:\s*(.+)$/i); if (tm && !title){ title = tm[1].trim(); continue; }
+    if (/^(URL Source|Markdown Content|Published Time|Warning):/i.test(l)) continue;
+    if (/^!\[/.test(l)) continue;                       // صور
+    l = l.replace(/\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)/g, "").replace(/!\[[^\]]*\]\([^)]*\)/g, "");
+    const linkChars = (l.match(/\)\]\(/g)||[]).length;
+    l = l.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]{1,3}/g, "").replace(/\s+/g," ").trim();
+    if (!l || l.length < 30 || ICONJUNK.test(l)) continue;
+    if (linkChars >= 2 && l.length < 120) continue;     // سطر روابط (تنقّل)
+    if (/^(الرئيسية|Home|Menu|Share|Read more|Subscribe|Sign in|Log in|Advertisement)/i.test(l)) continue;
+    if (NAVJUNK.test(l)) continue;
+    const h = /^#{1,3}\s+/.test(raw.trim());
+    blocks.push({t: h ? "h" : "p", x: l.replace(/^#{1,6}\s*/, "")});
+    if (blocks.length > 130) break;
+  }
+  return {ok:true, title, lang:"", blocks, via:"jina"};
+}
+const NAVJUNK = /^(skip to|jump to|saltar a|ir al contenido|passer au|aller au|zum inhalt|vai al|ga naar|пропустить|الانتقال إلى|تخطَّ إلى|تخطي إلى|اقفز إلى)/i;
+const ICONJUNK = /(?:[a-z]{8,}[-_]?){3,}/i;      // تسرّب أسماء أيقونات الخطوط
+function dedupText(t){
+  const n = t.length;
+  if (n < 8) return t;
+  for (const size of [Math.floor(n/2), Math.floor(n/3)]){
+    if (size < 4 || n % size) continue;
+    const piece = t.slice(0, size);
+    if (piece.repeat(n / size) === t) return piece;
+  }
+  return t;
+}
+function parseHTML(html, url){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll("svg title, symbol title, use title").forEach(n=>n.remove());
+  doc.querySelectorAll("script,style,noscript,svg,form,iframe,header,footer,nav,aside").forEach(n=>n.remove());
+  const title = (doc.querySelector('meta[property="og:title"]')||{}).content
+              || (doc.querySelector("title")||{}).textContent || "";
+  const lang = (doc.documentElement.getAttribute("lang")||"").slice(0,2).toLowerCase();
+  const scope = doc.querySelector("article") || doc.querySelector("main") || doc.body;
+  const blocks = []; const seen = new Set();
+  scope.querySelectorAll("h1,h2,h3,p,blockquote,li").forEach(el=>{
+    const txt = (el.textContent||"").replace(/\s+/g," ").trim();
+    if (!txt || txt.length < 28 || NAVJUNK.test(txt) || ICONJUNK.test(txt)) return;
+    if (el.querySelectorAll("a").length > 3 && txt.length < 160) return;   // سطر قوائم
+    const clean = dedupText(txt);
+    const key = clean.slice(0,60); if (seen.has(key)) return; seen.add(key);
+    const tag = el.tagName.toLowerCase();
+    txt = txt.replace(/\b\d+\s*(?:mins?|minutes?|hrs?|hours?)\s+ago\b/gi, "").replace(/\s+/g," ").trim();
+    blocks.push({t: (tag==="h1"||tag==="h2"||tag==="h3") ? "h" : (tag==="li" ? "li" : "p"), x: clean});
+  });
+  return {ok:true, title: title.trim(), lang, blocks: blocks.slice(0,130), via:"html"};
+}
+
+/* =========================================================================
+   الترجمة: عبر الخادم إن وُجد، وإلا مباشرةً عبر خدمات تدعم CORS
+   ========================================================================= */
+async function translateBatch(texts, sl){
+  const src = (sl && /^[a-z]{2}$/.test(sl) && sl !== "ar") ? sl : "auto";
+  if (S.server){
+    try{
+      const j = await apiJSON("api/translate", {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({texts, sl:src, tl:"ar"})});
+      return j.out.map(o=>o.ar);
+    }catch(e){ /* ننتقل للمسار المباشر */ }
+  }
+  try{ return await googleDirect(texts, src); }
+  catch(e){ return await mymemory(texts, src); }
+}
+async function googleDirect(texts, sl){
+  const body = new URLSearchParams(); texts.forEach(t=>body.append("q", t));
+  const r = await fetch("https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=" + sl + "&tl=ar",
+                        {method:"POST", body});
+  if (!r.ok) throw new Error("google HTTP " + r.status);
+  const j = await r.json();
+  const n = texts.length;
+  const fit = a => { if (a.length === n + 1 && /^[a-z\-]{2,8}$/i.test((a[n]||"").trim())) a = a.slice(0,n);
+                     while (a.length < n) a.push(""); return a.slice(0,n); };
+  if (typeof j === "string") return Array(n).fill(j);
+  if (!Array.isArray(j) || !j.length) throw new Error("بنية استجابة غير متوقعة");
+  if (Array.isArray(j[0])) return fit(j.map(x => Array.isArray(x) ? (x[0]||"") : String(x||"")));
+  const flat = j.map(x => String(x));
+  if (n === 1) return [flat[0] || ""];
+  return fit(flat);
+}
+async function mymemory(texts, sl){
+  const src = sl === "auto" ? "en" : sl; const out = [];
+  for (const t of texts){
+    const chunk = t.length > 480 ? t.slice(0,480) : t;
+    const r = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(chunk) +
+                          "&langpair=" + src + "|ar&de=press@example.com");
+    const j = await r.json();
+    if (j.quotaFinished) throw new Error("انتهت حصة خدمة الترجمة البديلة لهذا اليوم.");
+    out.push((j.responseData && j.responseData.translatedText) || "");
+  }
+  return out;
+}
+const runLimit = async (tasks, n) => {
+  const q = tasks.slice(); const run = async () => { while (q.length){ const t = q.shift(); try{ await t(); }catch(e){ throw e; } } };
+  await Promise.all(Array.from({length: Math.min(n, tasks.length)}, run));
+};
+
+/* =========================================================================
+   ② نافذة العرض
+   ========================================================================= */
+const QUICK = ["https://www.bbc.com/news","https://www.france24.com/en/","https://www.dw.com/ar/","https://www.aljazeera.net/",
+               "https://meduza.io/en","https://english.news.cn/","https://www.dawn.com/","https://www.elmundo.es/"];
+
+function select(p, opts={}){
+  S.sel = p; save();
+  // اختيار ذكي لنمط العرض: مباشر للمواقع القابلة للتضمين (أو مع وجود الوسيط)، ونصّي لغيرها
+  if (!opts.keepMode) S.mode = (p.e === "yes" || S.server) ? "live" : "read";
+  renderList();
+  const det = document.querySelector(`.country[data-c="${CSS.escape(p.c)}"]`); if (det) det.open = true;
+  renderViewer();
+  if (!opts.keepTrans) resetTrans();
+  if (window.innerWidth <= 980){ setTab("view"); document.body.classList.remove("drawer"); }
+}
+function stateChip(p){
+  if (!p) return ["unknown","—"];
+  if (p.e === "yes") return ["yes","يُعرض مباشرة"];
+  if (p.e === "no")  return ["no", S.server ? "يُعرض عبر الوسيط" : "يمنع التضمين"];
+  return ["unknown","غير مؤكد"];
+}
+function renderViewer(){
+  const p = S.sel, stage = $("#stage"), vt = $("#vtitle");
+  $("#openExt").href = p ? p.u : "#";
+  if (!p){
+    vt.innerHTML = `<b>لم تختر صحيفة بعد</b>`;
+    $("#vstate").className = "state unknown"; $("#vstate").textContent = "—";
+    stage.innerHTML = `<div class="emptywrap"><div class="card" style="max-width:640px">
+      <h3>ابدأ القراءة في ثلاث خطوات</h3>
+      <p><b>١)</b> اختر صحيفة من القائمة على يسار الشاشة (${META.papers} صحيفة في ${META.countries} دولة، منها ${META.free} بدون اشتراك).<br>
+         <b>٢)</b> ستظهر هنا: إما صفحة الموقع كما هي، أو نصّه في «وضع القراءة» إن منع الموقع التضمين.<br>
+         <b>٣)</b> اضغط <b>«ترجم»</b> فيظهر النص بالعربية في النافذة المجاورة.</p>
+      <p style="color:var(--muted);font-size:.82rem">جرّب واحدة من هذه:</p>
+      <div class="row" id="quickrow">${QUICK.map(u=>{const q=PAPERS.find(x=>x.u===u); return q?`<button class="chip" data-u="${esc(q.u)}">${flagOf(q.cc)} ${esc(q.n)}</button>`:"";}).join("")}</div>
+    </div></div>`;
+    $("#quickrow").addEventListener("click", e=>{ const b=e.target.closest("button[data-u]"); if(!b) return; const q=PAPERS.find(x=>x.u===b.dataset.u); if(q) select(q); });
+    return;
+  }
+  const [cls, label] = stateChip(p);
+  $("#vstate").className = "state " + cls; $("#vstate").textContent = label;
+  vt.innerHTML = `<span class="flag">${flagOf(p.cc)}</span><b>${esc(p.n)}</b><span class="url">${esc(hostOf(p.u))}</span>`;
+  $("#modeBtn").classList.toggle("on", S.mode === "read");
+  $("#modeBtn").title = S.mode === "read" ? "التحوّل إلى عرض الموقع المباشر" : "التحوّل إلى وضع القراءة (نص فقط)";
+  if (S.mode === "live") renderLive(); else renderRead();
+}
+function renderLive(){
+  const p = S.sel, stage = $("#stage");
+  const useProxy = S.server && (p.e !== "yes" || S.forceProxy);
+  if (!S.server && p.e !== "yes"){
+    stage.innerHTML = `<div class="emptywrap"><div class="card">
+      <h3>⚠︎ هذا الموقع يمنع العرض داخل نوافذ المواقع الأخرى</h3>
+      <p><b>${esc(p.n)}</b> يرسل ترويسة أمنية (<span dir="ltr">X-Frame-Options</span>) تمنع تضمين صفحته. لديك ثلاثة حلول فورية:</p>
+      <div class="row">
+        <button class="ghost primary" id="a">📖 وضع القراءة النصي</button>
+        <a class="ghost" href="${esc(p.u)}" target="_blank" rel="noopener noreferrer">↗ فتح في تبويب جديد</a>
+        <button class="ghost" id="b">جرّب العرض المباشر على أي حال</button>
+      </div>
+      <p style="margin-top:14px;color:var(--muted);font-size:.82rem">نصيحة: شغّل الخادم المرفق <span class="kbd" dir="ltr">python3 server.py</span> وسيعرض الموقع الصفحة عبر وسيط محلي يتجاوز هذا المنع تلقائيًا.</p>
+    </div></div>`;
+    $("#a").onclick = ()=>{ S.mode="read"; save(); renderViewer(); };
+    $("#b").onclick = ()=>{ S.forceProxy="try"; renderLiveTry(); };
+    return;
+  }
+  const src = useProxy ? ("api/view?url=" + encodeURIComponent(p.u) + (S.compat ? "&js=1" : "")) : p.u;
+  const sbx = useProxy
+    ? (S.compat ? "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"
+                : "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals")
+    : "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads";
+  stage.innerHTML = `<div class="frame-wrap">
+    <div class="frame-bar">
+      ${useProxy ? `<span>عرض عبر الوسيط المحلي — قد تختلف بعض العناصر (القوائم التفاعلية، الفيديو) عن الأصل.</span>
+        <label title="يمنح الصفحة صلاحية الوصول لذاكرة هذا الموقع — استخدمه فقط إذا لم تظهر الصفحة"><input type="checkbox" id="cmp" ${S.compat?"checked":""}> وضع التوافق</label>
+        <button class="ghost" id="direct" style="height:26px;font-size:.74rem">عرض مباشر بدل الوسيط</button>`
+      : `<span>عرض مباشر للصفحة الأصلية. إن بقيت فارغة فالموقع تغيّر إعداده الأمني — استخدم «وضع القراءة».</span>`}
+      <span style="flex:1"></span><span dir="ltr">${esc(hostOf(p.u))}</span>
+    </div>
+    <iframe src="${esc(src)}" ${useProxy?`sandbox="${sbx}"`:""} referrerpolicy="no-referrer" loading="eager"
+      title="${esc(p.n)}" allow="clipboard-read; clipboard-write"></iframe>
+  </div>`;
+  const cmp = $("#cmp"); if (cmp) cmp.onchange = ()=>{ S.compat = cmp.checked; save(); renderLive(); };
+  const d = $("#direct"); if (d) d.onclick = ()=>{ S.forceProxy = false; renderLive(); };
+}
+function renderLiveTry(){
+  const p = S.sel, stage = $("#stage");
+  stage.innerHTML = `<div class="frame-wrap">
+    <div class="frame-bar"><span>محاولة عرض مباشر — إن بقيت النافذة فارغة فالموقع يمنع التضمين.</span>
+      <span style="flex:1"></span><button class="ghost" id="back" style="height:26px;font-size:.74rem">رجوع</button></div>
+    <iframe src="${esc(p.u)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" title="${esc(p.n)}"></iframe></div>`;
+  $("#back").onclick = renderLive;
+}
+async function renderRead(){
+  const p = S.sel, stage = $("#stage");
+  stage.innerHTML = `<div class="reader" id="rd"><div class="skel">${"<b></b>"}</div><div style="color:var(--muted);font-size:.84rem"><span class="spin"></span> جارٍ جلب نص الصفحة…</div></div>`;
+  try{
+    const page = await getPage(p.u);
+    const rtl = RTL_LANGS.has((page.lang||"").slice(0,2)) || isArabicText((page.blocks[0]||{}).x || "");
+    const blocks = page.blocks.filter(b=>b.x && b.x.length > 25);
+    $("#rd").innerHTML = `
+      <h1 class="rtitle" dir="auto">${esc(page.title || p.n)}</h1>
+      <div class="rmeta">${flagOf(p.cc)} ${esc(p.c)} · ${esc(p.n)} · ${langLabel(page.lang||p.l)} · ${blocks.length} مقتطفًا
+        <a href="${esc(p.u)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">المصدر الأصلي ↗</a></div>
+      ${page.warn?`<p style="color:var(--muted);font-size:.78rem;margin:0 0 14px">${esc(page.warn)}</p>`:""}
+      ${blocks.map(b=>`<p class="blk ${b.t==="li"?"li":(b.t==="h"?"h":"")}" dir="auto">${esc(b.x)}</p>`).join("")}
+      <p style="color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:12px">
+        هذا نص مستخرَج آليًا من الصفحة (قد يفوت بعض العناصر). © المحتوى ملك ناشره ${esc(p.n)}.</p>`;
+    if (rtl) $("#rd").setAttribute("dir","rtl"); else $("#rd").setAttribute("dir","ltr");
+  }catch(err){
+    $("#rd").innerHTML = `<div class="card"><h3>تعذّر جلب النص</h3><p>${esc(err.message)}</p>
+      <div class="row"><button class="ghost primary" id="rt">إعادة المحاولة</button>
+      <a class="ghost" href="${esc(p.u)}" target="_blank" rel="noopener noreferrer">↗ فتح المصدر</a></div>
+      ${S.server?"":`<p style="margin:12px 0 0;color:var(--muted);font-size:.82rem">شغّل الخادم المرفق للحصول على جلب موثوق: <span class="kbd" dir="ltr">python3 server.py</span></p>`}</div>`;
+    $("#rt").onclick = renderRead;
+  }
+}
+
+/* =========================================================================
+   ③ نافذة الترجمة
+   ========================================================================= */
+function resetTrans(){
+  S.tstate = "idle"; S.error = null;
+  $("#tsrc").textContent = S.sel ? hostOf(S.sel.u) : "";
+  renderTrans();
+}
+function setProgress(done, total){
+  const bar = $("#tprog i"); if (bar) bar.style.width = Math.round(done*100/Math.max(total,1)) + "%";
+  const lbl = $("#tpnum"); if (lbl) lbl.textContent = `${done} / ${total}`;
+}
+function renderTrans(){
+  const stage = $("#tstage"), p = S.sel;
+  $("#tsrc").textContent = p ? hostOf(p.u) : "";
+  $("#trBtn").disabled = !p;
+  $("#trBtn").innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h9M8 3v2c0 4-2 7-5 9"/><path d="M6 12c1.5 3 4 5 7 6"/><path d="m13 20 3.5-8 3.5 8M14.5 17h5"/></svg>` + (S.tstate==="loading"?" جارٍ الترجمة…":" ترجم");
+  if (!p){
+    stage.innerHTML = `<div class="emptywrap"><div class="card">
+      <h3>الترجمة تظهر هنا</h3>
+      <p>اختر صحيفة من القائمة. عند الضغط على <b>«ترجم»</b> سيُستخرج نص الصفحة ويُترجَم إلى العربية في هذه النافذة، وتبقى صفحة الموقع الأصلية في النافذة المجاورة.</p>
+      <p style="color:var(--muted);font-size:.82rem">الترجمة آلية وقد تخطئ في الأسماء والمصطلحات — والنص الأصلي يبقى هو المرجع.</p>
+    </div></div>`;
+    return;
+  }
+  if (S.tstate === "idle"){
+    stage.innerHTML = `<div class="emptywrap"><div class="card">
+      <h3>جاهز للترجمة${p.a?` — وهناك نسخة عربية رسمية` : ""}</h3>
+      <p>سأجلب نص <b>${flagOf(p.cc)} ${esc(p.n)}</b> (${langLabel(p.l)}) وأترجمه إلى العربية فقرة فقرة.</p>
+      <div class="row">
+        <button class="ghost primary" id="go">ترجم الصفحة الآن</button>
+        ${p.a?`<button class="ghost soft" id="arod">✔ النسخة العربية الرسمية (${esc(hostOf(p.a))})</button>`:""}
+        <a class="ghost" href="${esc("https://translate.google.com/translate?sl=auto&tl=ar&u=" + encodeURIComponent(p.u))}" target="_blank" rel="noopener noreferrer">ترجمة جوجل في تبويب ↗</a>
+      </div>
+      ${p.a?`<p style="margin-top:12px;color:var(--muted);font-size:.82rem">النسخة العربية الرسمية أفضل من الترجمة الآلية عندما تكون متوفرة.</p>`:""}
+    </div></div>`;
+    $("#go").onclick = ()=>translatePage(false);
+    const a = $("#arod"); if (a) a.onclick = ()=>{ S.openArabicEdition = true; translatePage(false, {asOriginal:true}); };
+    return;
+  }
+  if (S.tstate === "loading"){
+    stage.innerHTML = `<div class="reader">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:.88rem;margin-bottom:10px">
+        <span class="spin"></span> <span id="tphase">جارٍ جلب نص الصفحة…</span></div>
+      <div class="prog" id="tprog"><i></i></div>
+      <div style="color:var(--muted);font-size:.8rem" id="tpn">الفقرات المترجمة: <span id="tpnum">0 / 0</span></div>
+      <div class="skel" style="margin-top:20px">${"<b></b>".repeat(6)}</div>
+    </div>`;
+    return;
+  }
+  if (S.tstate === "error"){
+    stage.innerHTML = `<div class="emptywrap"><div class="card"><h3>تعذّرت الترجمة</h3><p>${esc(S.error||"خطأ غير معروف")}</p>
+      <div class="row"><button class="ghost primary" id="again">إعادة المحاولة</button>
+        <a class="ghost" href="${esc("https://translate.google.com/translate?sl=auto&tl=ar&u=" + encodeURIComponent(p.u))}" target="_blank" rel="noopener noreferrer">ترجمة جوجل في تبويب ↗</a>
+        <button class="ghost" id="rdr">قراءة النص الأصلي</button></div>
+      ${S.server?"":`<p style="margin:12px 0 0;color:var(--muted);font-size:.82rem">للترجمة الأسرع والأكثر موثوقية شغّل الخادم المرفق: <span class="kbd" dir="ltr">python3 server.py</span></p>`}</div></div>`;
+    $("#again").onclick = ()=>translatePage(true);
+    $("#rdr").onclick = ()=>{ S.mode="read"; save(); renderViewer(); };
+    return;
+  }
+  const R = S.lastResult;
+  if (!R){ resetTrans(); return; }
+  const blocks = R.blocks.map((b,i)=>({...b, ar: R.ar ? R.ar[i] : null}));
+  stage.innerHTML = `<div class="reader" dir="rtl">
+    <div class="tmeta">
+      <span class="tag">ترجمة آلية إلى العربية</span>
+      <span>${flagOf(p.cc)} ${esc(p.n)}</span>
+      <span>اللغة الأصلية: ${langLabel(R.lang || p.l)}</span>
+      ${R.fromArabic ? `<span class="tag" style="background:var(--warn-soft);color:var(--warn)">المصدر عربي أصلًا</span>`:""}
+      <span style="flex:1"></span><button class="ghost" id="ref" style="height:24px;font-size:.74rem">تحديث</button>
+    </div>
+    <h1 class="rtitle" dir="auto" style="font-size:1.35rem">${esc(R.title || p.n)}</h1>
+    ${blocks.map(b=>`${b.t==="h"?`<div class="tp h" ${/^[\u0600-\u06FF]/.test(b.ar||b.x)?"":"dir=\"auto\""}>${esc(b.ar||b.x)}</div>`:`<p class="tp">${esc(R.fromArabic? b.x : (b.ar || b.x))}</p>`}
+      ${(S.bilingual && !R.fromArabic) ? `<div class="orig">${esc(b.x)}</div>`:""}`).join("")}
+    <p style="color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:12px;margin-top:24px">
+      الترجمة آلية من «${esc(R.title || p.n)}» — تحقّق من النص الأصلي عند الاقتباس.
+      <a href="${esc(p.u)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">الصفحة الأصلية ↗</a></p>
+  </div>`;
+  $("#ref").onclick = () => translatePage(true);
+} 
+
+/* ---------- خط الأنابيب: جلب + ترجمة مع تقدّم مباشر ---------- */
+async function translatePage(fresh, opts={}){
+  const p = S.sel; if (!p) return;
+  const official = !!(opts.asOriginal && p.a);
+  const url = official ? p.a : p.u;
+  const key = (official ? "off:" : "tr:") + url;
+  const hit = TCACHE.get(key);
+  if (hit && !fresh){ S.lastResult = hit; S.tstate = "done"; renderTrans(); return; }
+  S.tstate = "loading"; S.lastResult = null; renderTrans();
+  const setPhase = t => { const el = $("#tphase"); if (el) el.textContent = t; };
+  try{
+    setPhase(official ? "جارٍ جلب النسخة العربية الرسمية…" : "جارٍ جلب نص الصفحة…");
+    const page = await getPage(url, {fresh});
+    let blocks = (page.blocks || []).filter(b => b.x && b.x.length > 2);
+    if (!blocks.length) throw new Error("لم يُعثر على نص قابل للقراءة في هذه الصفحة (ربما تعتمد على جافاسكربت أو تحجب الجلب الآلي).");
+    let truncated = false;
+    if (blocks.length > 110){ blocks = blocks.slice(0, 110); truncated = true; }
+    const sample = blocks.slice(0, 8).map(b => b.x).join(" ");
+    const fromArabic = official || isArabicText(sample) || String(page.lang || "").startsWith("ar");
+    let result;
+    if (fromArabic){
+      result = {title: page.title || p.n, lang: "ar", blocks, ar: null, fromArabic: true,
+                n: blocks.length, url, truncated, at: Date.now()};
+    } else {
+      const srcLang = (page.lang && /^[a-z]{2}$/.test(page.lang) && page.lang !== "ar") ? page.lang : "auto";
+      const texts = blocks.map(b => b.x);
+      const out = new Array(texts.length);
+      const CH = S.server ? 16 : 10;
+      const batches = [];
+      for (let i = 0; i < texts.length; i += CH){
+        const idx = []; for (let k = i; k < Math.min(i + CH, texts.length); k++) idx.push(k);
+        batches.push(idx);
+      }
+      let done = 0; setPhase("جارٍ الترجمة إلى العربية…"); setProgress(0, texts.length);
+      await runLimit(batches.map(idx => async () => {
+        const res = await translateBatch(idx.map(k => texts[k]), srcLang);
+        res.forEach((ar, j) => { out[idx[j]] = ar; });
+        done += idx.length; setProgress(done, texts.length);
+      }), S.server ? 3 : 2);
+      result = {title: page.title || p.n, lang: srcLang, blocks, ar: out, fromArabic: false,
+                n: texts.length, url, truncated, at: Date.now()};
+    }
+    TCACHE.set(key, result); S.lastResult = result; S.tstate = "done"; renderTrans();
+    if (truncated) toast("عُرضت أول ١١٠ فقرات من الصفحة.");
+  }catch(err){
+    S.tstate = "error"; S.error = err.message || String(err); renderTrans();
+  }
+}
+
+/* =========================================================================
+   ربط الواجهة
+   ========================================================================= */
+function applyTheme(){ document.documentElement.dataset.theme = S.theme; }
+function applySide(){ document.documentElement.dataset.side = S.side; }
+function applyWidths(){
+  document.documentElement.style.setProperty("--sb", S.widths.sb + "px");
+  document.documentElement.style.setProperty("--tr", S.widths.tr + "px");
+}
+function applyScale(){ document.documentElement.style.setProperty("--read", (1.02 * S.scale).toFixed(2) + "rem"); }
+function setTab(name){
+  document.body.classList.toggle("tab-trans", name === "trans");
+  $("#tabView").classList.toggle("on", name === "view");
+  $("#tabTrans").classList.toggle("on", name === "trans");
+}
+$("#trBtn").onclick = () => { if (!S.sel){ toast("اختر صحيفة أولًا"); return; } translatePage(S.tstate === "done"); };
+$("#biBtn").onclick = () => { S.bilingual = !S.bilingual; $("#biBtn").classList.toggle("on", S.bilingual); save();
+  if (S.tstate === "done") renderTrans(); toast(S.bilingual ? "إظهار النص الأصلي بجانب الترجمة" : "عرض الترجمة فقط"); };
+$("#fontUp").onclick = () => { S.scale = Math.min(1.5, +(S.scale + .08).toFixed(2)); applyScale(); save(); };
+$("#fontDn").onclick = () => { S.scale = Math.max(.82, +(S.scale - .08).toFixed(2)); applyScale(); save(); };
+$("#copyBtn").onclick = async () => {
+  const R = S.lastResult; if (!R){ toast("لا توجد ترجمة لنسخها"); return; }
+  const text = (R.title ? R.title + "\n\n" : "") + R.blocks.map((b,i)=> R.fromArabic ? b.x : (R.ar[i] || "")).filter(Boolean).join("\n\n")
+             + "\n\n— ترجمة آلية من " + R.url;
+  try{ await navigator.clipboard.writeText(text); toast("نُسخت الترجمة ✓"); }
+  catch(e){ toast("تعذّر النسخ — حدّد النص يدويًا"); }
+};
+$("#printBtn").onclick = () => window.print();
+$("#modeBtn").onclick = () => { S.mode = S.mode === "read" ? "live" : "read"; save(); renderViewer(); };
+$("#reloadBtn").onclick = () => { if (!S.sel) return; if (S.mode === "live") renderLive(); else { PCACHE.delete(S.sel.u); renderRead(); } };
+$("#sideBtn").onclick = () => { S.side = S.side === "left" ? "right" : "left"; applySide(); save(); toast("القائمة الآن على " + (S.side === "left" ? "اليسار" : "اليمين")); };
+$("#themeBtn").onclick = () => { S.theme = S.theme === "light" ? "dark" : "light"; applyTheme(); save(); };
+$("#menuBtn").onclick = () => document.body.classList.toggle("drawer");
+$("#scrim").onclick = () => document.body.classList.remove("drawer");
+$("#tabView").onclick = () => setTab("view");
+$("#tabTrans").onclick = () => setTab("trans");
+addEventListener("keydown", e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if (e.key === "/" && !typing){ e.preventDefault(); $("#q").focus(); $("#q").select(); }
+  else if (e.key === "Escape"){ document.body.classList.remove("drawer"); const m = $(".modal"); if (m) m.remove(); }
+  else if ((e.key === "t" || e.key === "T") && !typing && !e.ctrlKey && !e.metaKey){ if (S.sel) translatePage(S.tstate === "done"); }
+  else if ((e.key === "b" || e.key === "B") && !typing && !e.ctrlKey && !e.metaKey){ $("#biBtn").click(); }
+});
+/* سحب الفواصل لتغيير عرض النوافذ */
+function dragSplit(el, which){
+  el.addEventListener("pointerdown", e => {
+    if (window.innerWidth <= 980) return;
+    e.preventDefault(); el.classList.add("drag"); el.setPointerCapture(e.pointerId);
+    const x0 = e.clientX, w0 = S.widths[which], side = S.side;
+    const move = ev => {
+      const dx = ev.clientX - x0;
+      let w = which === "sb" ? w0 + (side === "left" ? dx : -dx) : w0 - dx;
+      const cap = which === "sb" ? window.innerWidth * .42 : window.innerWidth * .62;
+      w = Math.min(Math.max(w, which === "sb" ? 225 : 300), Math.max(280, cap));
+      S.widths[which] = Math.round(w); applyWidths();
+    };
+    const up = () => { el.classList.remove("drag");
+      el.removeEventListener("pointermove", move); el.removeEventListener("pointerup", up); save(); };
+    el.addEventListener("pointermove", move); el.addEventListener("pointerup", up);
+  });
+  el.addEventListener("dblclick", () => { S.widths[which] = which === "sb" ? 290 : 470; applyWidths(); save(); });
+}
+dragSplit($("#split1"), "sb"); dragSplit($("#split2"), "tr");
+/* المساعدة */
+function showHelp(){
+  const m = document.createElement("div"); m.className = "modal";
+  m.innerHTML = `<div class="card">
+    <h3>كيف يعمل الموقع؟</h3>
+    <ul>
+      <li><b>النافذة الأولى (القائمة):</b> ${META.papers} صحيفة في ${META.countries} دولة، مرتّبة حسب الدولة. الصفّ المجاني بالكامل عليها شارة <b>مجانية</b>، و${META.free} صحيفة منها بلا اشتراك. النقطة الخضراء تعني أن الموقع يُعرض داخل النافذة مباشرة.</li>
+      <li><b>النافذة الثانية (الموقع):</b> تعرض الصفحة نفسها. بعض المواقع تضع ترويسة <span dir="ltr">X-Frame-Options</span> تمنع التضمين — هنا تظهر تلقائيًا خيارات: <b>وضع القراءة</b> (نص فقط)، أو <b>العرض عبر الوسيط المحلي</b> إذا كان الخادم المرفق يعمل، أو الفتح في تبويب جديد.</li>
+      <li><b>النافذة الثالثة (الترجمة):</b> تُستخرج الفقرات وتُترجم آليًا إلى العربية. زر <b>النص الأصلي</b> يعرض الأصل تحت كل فقرة، وزر <b>النسخة العربية الرسمية</b> يظهر عندما تكون الصحيفة تملك نسخة عربية (${META.arabicEditions} صحيفة في القائمة).</li>
+      <li><b>الخادم المرفق:</b> <span class="kbd" dir="ltr">python3 server.py</span> يوفّر جلبًا موثوقًا للنصوص والتضمين، ويُشغّل الموقع على <span class="kbd" dir="ltr">http://localhost:8000</span>.</li>
+      <li><b>الاختصارات:</b> <span class="kbd">/</span> بحث · <span class="kbd">t</span> ترجم · <span class="kbd">b</span> النص الأصلي · <span class="kbd">Esc</span> إغلاق. اسحب الفواصل لتغيير عرض النوافذ، وانقر نقرًا مزدوجًا لإرجاعها.</li>
+      <li><b>حقوق:</b> المحتوى ملك ناشريه، والترجمة آلية قد تخطئ — والنص الأصلي هو المرجع عند الاقتباس.</li>
+    </ul>
+    <div class="row"><button class="ghost primary" id="okm">فهمت</button></div>
+  </div>`;
+  document.body.appendChild(m);
+  m.addEventListener("click", e => { if (e.target === m || e.target.id === "okm") m.remove(); });
+}
+$("#helpBtn").onclick = showHelp;
+$("#aboutLink").onclick = showHelp;
+/* =========================================================================
+   الإقلاع
+   ========================================================================= */
+async function detectServer(){
+  try{
+    const r = await fetch("api/health", {cache:"no-store"});
+    const j = await r.json(); S.server = !!j.ok;
+  }catch(e){ S.server = false; }
+  $("#srvdot").classList.toggle("on", S.server);
+  $("#srvtext").textContent = S.server ? "الوسيط المحلي يعمل" : "بدون وسيط — ميزات محدودة";
+  $("#srvbadge").title = S.server
+    ? "متصّل بخادم server.py: التضمين عبر الوسيط والجلب والترجمة تعمل من الخادم."
+    : "لم يُعثر على server.py — شغّله بالأمر python3 server.py للحصول على أفضل أداء.";
+}
+(function init(){
+  const savedSel = load();
+  applyTheme(); applySide(); applyWidths(); applyScale();
+  $("#biBtn").classList.toggle("on", S.bilingual);
+  $$(".chip").forEach(c => c.classList.toggle("on", c.dataset.f === S.filter));
+  renderList(); renderViewer(); renderTrans();
+  setTab("view");
+  const p = savedSel ? PAPERS.find(x => x.u === savedSel) : null;
+  if (p) select(p, {keepTrans:true});
+  if (!S.server) $("#srvtext").textContent = "جارٍ الفحص…";
+  detectServer();
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4757124b96429c1',t:'MTc5MTQ2NTYxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
