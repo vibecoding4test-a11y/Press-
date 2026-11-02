@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+<title>Daily Example</title>
+<link>https://example.com/</link>
+<description>Latest news</description>
+<item>
+  <title><![CDATA[Coastal towns brace for storm]]></title>
+  <link>/2026/11/02/coastal-storm-warning-issued</link>
+  <pubDate>Mon, 02 Nov 2026 09:00:00 GMT</pubDate>
+  <description><![CDATA[<p>Thousands of homes are without power as a storm sweeps the coast.</p>]]></description>
+  <media:content url="https://example.com/img/storm.jpg" medium="image"/>
+  <category>Weather</category>
+</item>
+<item>
+  <title>Markets slip as rate fears return</title>
+  <link>/2026/11/02/markets-slip-as-rate-fears-return</link>
+  <pubDate>Mon, 02 Nov 2026 07:30:00 GMT</pubDate>
+  <description>Global stocks fell on Monday.</description>
+</item>
+<item>
+  <title>Leaders meet for climate talks</title>
+  <link>/2026/11/01/leaders-meet-for-climate-talks</link>
+  <pubDate>Sun, 01 Nov 2026 18:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

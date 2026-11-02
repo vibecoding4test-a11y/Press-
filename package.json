@@ -1,0 +1,18 @@
+{
+  "name": "al-marsad",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "المرصد — اقرأ صحف العالم مترجمة إلى العربية عبر خادم استخراج (بلا iframe).",
+  "scripts": {
+    "start": "node server/server.mjs",
+    "dev": "node --watch server/server.mjs",
+    "test": "node --test --test-timeout=20000 tests/*.test.mjs",
+    "test:watch": "node --test --watch tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": ["news", "translation", "arabic", "rss", "supabase", "edge-function", "reader"],
+  "license": "MIT"
+}

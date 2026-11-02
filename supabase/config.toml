@@ -1,0 +1,9 @@
+# Deploy with:
+#   supabase functions deploy ingest --no-verify-jwt
+#
+# verify_jwt = false is required: the endpoint is called by a static frontend
+# with the public anon key absent on purpose (it exposes only public news data).
+project_id = "al-marsad"
+
+[functions.ingest]
+verify_jwt = false
