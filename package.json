@@ -8,11 +8,20 @@
     "start": "node server/server.mjs",
     "dev": "node --watch server/server.mjs",
     "test": "node --test --test-timeout=20000 tests/*.test.mjs",
-    "test:watch": "node --test --watch tests/*.test.mjs"
+    "test:watch": "node --test --watch tests/*.test.mjs",
+    "fixtures": "node tests/serve-fixtures.mjs"
   },
   "engines": {
     "node": ">=18.17"
   },
-  "keywords": ["news", "translation", "arabic", "rss", "supabase", "edge-function", "reader"],
+  "keywords": [
+    "news",
+    "translation",
+    "arabic",
+    "rss",
+    "supabase",
+    "edge-function",
+    "reader"
+  ],
   "license": "MIT"
 }

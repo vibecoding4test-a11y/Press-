@@ -288,12 +288,16 @@ fixtures, paywall and thin-page detection, Arabic/RTL handling, JSON-LD fallback
 feed discovery, link extraction, SSRF blocking, redirect/size/timeout limits, cache behaviour, and
 translation batching/alignment (with a stubbed provider, so no network is required).
 
-The fixtures live in `tests/fixtures/` and double as a local playground:
+The fixtures live in `tests/fixtures/` and double as an offline playground — a fake publisher with a
+homepage, an RSS feed, a paywalled article and an Arabic article:
 
 ```bash
-python3 -m http.server 8899 --directory tests/fixtures   # a fake publisher
-ALLOW_PRIVATE_HOSTS=1 npm start                          # then paste http://127.0.0.1:8899/
+npm run fixtures                    # fake publisher on http://127.0.0.1:8899
+ALLOW_PRIVATE_HOSTS=1 npm start     # app on :3000, allowed to fetch localhost
+# then paste http://127.0.0.1:8899/ into the app (or http://127.0.0.1:8899/feed.xml)
 ```
+
+`ALLOW_PRIVATE_HOSTS=1` exists only for this; leave it unset in production so the SSRF guard stays on.
 
 ## Troubleshooting
 
