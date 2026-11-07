@@ -7,6 +7,39 @@ Legend: ✅ = pass, ❌ = file a note. The app UI is Arabic; Arabic labels are q
 
 ---
 
+## Where do I type these commands?
+
+Everything in this file is typed into a **terminal** (a.k.a. command line) — never into the website
+and never into an HTML/JS file.
+
+| Your computer | Open this | Get into the project folder |
+| --- | --- | --- |
+| macOS | **Terminal** (⌘ + Space, type “Terminal”) | `cd ~/Projects/Press-` |
+| Windows | **PowerShell** or Windows Terminal | `cd C:\Users\<you>\Projects\Press-` |
+| Linux | your terminal | `cd ~/Press-` |
+| VS Code | **Terminal → New Terminal** | already opens in the folder ✔ |
+
+First time on your machine:
+
+```bash
+git clone https://github.com/vibecoding4test-a11y/Press-.git
+cd Press-
+git checkout arena/871390a2-press
+npm start                                   # keep this window open; Ctrl+C stops it
+```
+
+Then, in a **second** terminal window (same folder):
+`npm test`, the `curl` lines, etc.
+
+What goes where:
+
+- `node -v`, `npm start`, `npm test`, `git …`, `curl …` → **terminal**
+- `http://localhost:3000` → **browser address bar**
+- Nothing on this list needs you to edit a file. (Configuration is optional: copy `.env.example`
+  to `.env` only if you want to add translation keys.)
+
+---
+
 ## 0. Setup (2 minutes)
 
 - [ ] Node 18.17+ installed → `node -v`
