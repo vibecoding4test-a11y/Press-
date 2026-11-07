@@ -187,6 +187,8 @@ DeepL both have generous free tiers) so translation never fails mid-article.
 The frontend is static; the ingestion function runs on Supabase. That combination is the one the
 architecture was designed for.
 
+> Step-by-step checkbox version, with your project's exact commands and URLs: **[DEPLOY-SUPABASE.md](DEPLOY-SUPABASE.md)**.
+
 ### 1. Database cache (optional but recommended)
 
 ```sql
